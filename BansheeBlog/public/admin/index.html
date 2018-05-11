@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BansheeBlog CMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic@6.5.0/picnic.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster|Material+Icons|Open+Sans">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/commonmark/0.28.1/commonmark.js" async></script>
+    <script src="data-bindings.umd.js"></script>
+
+    <style>
+        html, body {
+            background-color: #FAFAFA;
+            --primary-font-color: #212121;
+            --weak-font-color: #9E9E9E;
+        }
+
+        .logo {
+            color: var(--primary-font-color);
+            font-family: 'Lobster', cursive;
+            font-size: 2rem;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        nav div.pseudo {
+            user-select: none;
+            cursor: pointer;
+            display: inline-block;
+            padding: 0.3em 0.3em;
+        }
+        textarea {
+            min-width: 100%;
+            max-width: 100%;
+        }
+        section {
+            width: 90%;
+            margin: 0 auto;
+            padding: 80px 0 0;
+        }
+        .article-slug {
+            margin-top: -5px;
+            font-size: 10pt;
+            color: var(--weak-font-color);
+        }
+        .article-slug:not(:empty):before {
+            margin-left: 5px;
+            content: 'Slug: ';
+        }
+
+        input, textarea {
+            border-radius: 1px;
+        }
+        .preview {
+            padding: 2px 8px;
+            /*background-color: #F5F5F5;*/
+            border-radius: 2px;
+        }
+        .preview p, #article-editor {
+            font-size: 1rem;
+            box-sizing: border-box;
+            overflow-y: hidden;
+        }
+        .preview:empty:after {
+            content: 'Write some markup';
+            font-size: 10pt;
+            color: var(--weak-font-color);
+        }
+        .preview > :first-child {
+            margin-top: 0;
+        }
+
+    </style>
+</head>
+<body>
+<nav>
+    <div class="logo">Banshee Blog</div>
+    <div id="new-article" class="material-icons pseudo button">create</div>
+    <div id="all-articles" class="material-icons pseudo button">view_list</div>
+    <div id="settings" class="material-icons pseudo button">settings</div>
+</nav>
+<main>
+    <section>
+        <div id="content"></div>
+    </section>
+</main>
+<script>
+    function request(type, url, data = null) {
+        return new Promise((accept, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(type, url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onload = e => {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200 || xhr.status === 201) {
+                        if (xhr.getResponseHeader("Content-Type") === "application/json") {
+                            return accept(JSON.parse(xhr.responseText));
+                        }
+                        return accept(xhr.responseText);
+                    }
+                    reject(xhr.statusText, xhr);
+                }
+            };
+            xhr.onerror = () => reject(xhr.statusText, xhr);
+            xhr.send(JSON.stringify(data));
+        });
+    }
+
+    const newArticleButton = document.getElementById("new-article");
+    const allArticlesButton = document.getElementById("all-articles");
+    const settingsButton = document.getElementById("settings");
+
+    newArticleButton.onclick = () => dataBinder.render("article-editor", "content");
+    allArticlesButton.onclick = () => dataBinder.render("article-view", "content");
+    settingsButton.onclick = () => dataBinder.render("settings-editor", "content");
+
+    dataBinder.getTemplates("article-editor.html", "settings-editor.html", "article-view.html").then(() => {
+        dataBinder.render("article-editor", "content");
+    });
+</script>
+</body>
+</html>

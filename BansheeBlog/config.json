@@ -1,0 +1,7 @@
+{
+  "LiteDbConnectionString": "Filename=database.litedb",
+  "Port": 5420,
+  "PublicDirectory": "public",
+  "ThemeDirectory": "themes",
+  "ActiveTemplate": "default"
+}

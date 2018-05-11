@@ -1,0 +1,81 @@
+<script type="text/template" data-template id="article-editor" >
+    <div class="one-800">
+        <input data-bindings="title" class="" type="text" placeholder="Article title">
+        <i data-bindings="slug" class="article-slug"></i>
+    </div>
+    <div class="flex one two-800">
+        <div class="">
+            <label>
+                Markdown
+                <textarea data-bindings="markdown" id="markdown-editor" rows="15"></textarea>
+            </label>
+            <input data-bindings="tags" type="text" placeholder="Tags (separated by space)">
+            <label>
+                <input type="checkbox" data-bindings="public">
+                <span class="checkable">Public</span>
+            </label>
+            <button data-bindings="submit -> onclick">Save article</button>
+        </div>
+        <div class="">
+            <label>Preview</label>
+            <div data-bindings="html -> innerHTML" class="preview" id="new-article-preview"></div>
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript" data-behaviour for="article-editor">
+    function onBind() {
+        return {
+            afterBind: () => {
+                let parser = undefined;
+                let renderer = undefined;
+                this.onPropertyChanged("title", (sender, value) => {
+                    this.slug = value.toString().toLowerCase()
+                        .replace(/\s+/g, '-')           // Replace spaces with -
+                        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                        .replace(/^-+/, '')             // Trim - from start of text
+                        .replace(/-+$/, '');            // Trim - from end of text
+                });
+
+                const editor = document.getElementById('markdown-editor');
+                const minHeight = editor.scrollHeight;
+
+                this.onPropertyChanged("markdown", (sender, value) => {
+                    if (parser === undefined) {
+                        parser = new commonmark.Parser();
+                        renderer = new commonmark.HtmlRenderer();
+                    }
+                    let parsed = parser.parse(value);
+                    this.html = renderer.render(parsed);
+
+                    let outerHeight = parseInt(window.getComputedStyle(editor).height, 10);
+                    let diff = outerHeight - editor.clientHeight;
+
+                    editor.style.height = 0 + "px";
+                    editor.style.height = Math.max(100, editor.scrollHeight + diff) + 'px';
+                });
+
+            },
+            properties: {
+                title: "",
+                slug: "",
+                tags: "",
+                markdown: "",
+                html: "",
+                submit: event => {
+                    event.preventDefault();
+                    const article = {
+                        title: this.title,
+                        slug: this.slug,
+                        tags: this.tags.split(" "),
+                        markdown: this.markdown
+                    };
+                    request("POST", "/admin/article", article).then(() => {
+                        console.log("article posted");
+                    });
+                }
+            }
+        };
+    }
+</script>

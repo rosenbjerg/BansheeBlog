@@ -1,0 +1,33 @@
+<script type="text/template" data-template id="article-view" >
+    <div class="flex two three-500">
+        <div>
+            <label>
+                Markdown
+                <textarea data-bindings="markdown" id="markdown-editor" rows="15"></textarea>
+            </label>
+            <input data-bindings="tags" type="text" placeholder="Tags (separated by space)">
+            <label>
+                <input type="checkbox" data-bindings="public">
+                <span class="checkable">Public</span>
+            </label>
+            <button data-bindings="submit -> onclick">Save article</button>
+        </div>
+        <div>
+            <label>Preview</label>
+            <div data-bindings="html -> innerHTML" class="preview" id="new-article-preview"></div>
+        </div>
+    </div>
+</script>
+
+<script type="text/javascript" data-behaviour for="article-view">
+    function onBind() {
+        return {
+            afterBind: () => {
+                const articles = request("GET", "/admin/articles")
+            },
+            properties: {
+                
+            }
+        };
+    }
+</script>

@@ -1,0 +1,58 @@
+<script type="text/template" data-template id="settings-editor">
+    <div style="margin: 0 auto; max-width: 800px">
+        <h3>Blog settings</h3>
+        <fieldset>
+            <label>Title<input type="text" data-bindings="blogTitle"></label>
+            <label>Description<input type="text" data-bindings="blogDescription"></label>
+            <label>Author<input type="text" data-bindings="author"></label>
+        </fieldset>
+        <fieldset>
+            <label>Web address<input type="text" data-bindings="blogUrl" placeholder="https://example.com"></label>
+            <label>Google Analytics TrackingId<input type="text" data-bindings="googleAnalyticsTrackingId" placeholder="UA-XXXXX-Y" pattern="/^ua-\d{4,9}-\d{1,4}$/i"></label>
+        </fieldset>
+        <label>
+            Theme
+            <select data-bindings="themes -> innerHTML, activeTheme"></select>
+        </label>
+        <button data-bindings="save -> onclick, saveDisabled -> disabled">Save settings</button>
+        <span data-bindings="status"></span>
+    </div>
+</script>
+
+<script type="text/javascript" data-behaviour id="settings-editor">
+    function createBehaviour() {
+        return {
+            afterBind: () => {
+                Promise.all([request("GET", "/admin/themes"), request("GET", "/admin/settings")]).then(values => {
+                    const themes = values[0], settings = values[1];
+                    this.themes = themes.map(theme => `<option>${theme}</option>`).join('');
+                    this.activeTheme = settings.ActiveTheme;
+                    this.blogTitle = settings.BlogTitle;
+                    this.blogDescription = settings.BlogDescription;
+                    this.author = settings.Author;
+                    this.blogUrl = settings.BlogUrl;
+                    this.googleAnalyticsTrackingId = settings.GoogleAnalyticsTrackingId;
+                })
+            },
+            properties: {
+                save: async () => {
+                    this.saveDisabled = true;
+                    const settings = {
+                        ActiveTheme: this.activeTheme,
+                        BlogTitle: this.blogTitle,
+                        BlogDescription: this.blogDescription,
+                        Author: this.author,
+                        BlogUrl: this.blogUrl,
+                        GoogleAnalyticsTrackingId: this.googleAnalyticsTrackingId,
+                    };
+                    await request("POST", "/admin/settings", settings);
+                    this.status = "Saved!";
+                    setTimeout(() => {
+                        this.status = "";
+                        this.saveDisabled = false;
+                    }, 700);
+                }
+            }
+        };
+    }
+</script>
