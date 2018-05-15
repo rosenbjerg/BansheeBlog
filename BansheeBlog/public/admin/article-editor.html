@@ -39,8 +39,14 @@
                 });
 
                 const editor = document.getElementById('markdown-editor');
-                const minHeight = editor.scrollHeight;
+                const resize = () => {
+                    let outerHeight = parseInt(window.getComputedStyle(editor).height, 10);
+                    let diff = outerHeight - editor.clientHeight;
 
+                    editor.style.height = 0 + "px";
+                    editor.style.height = Math.max(100, editor.scrollHeight + diff) + 'px';
+                };
+                
                 this.onPropertyChanged("markdown", (sender, value) => {
                     if (parser === undefined) {
                         parser = new commonmark.Parser();
@@ -48,21 +54,11 @@
                     }
                     let parsed = parser.parse(value);
                     this.html = renderer.render(parsed);
-
-                    let outerHeight = parseInt(window.getComputedStyle(editor).height, 10);
-                    let diff = outerHeight - editor.clientHeight;
-
-                    editor.style.height = 0 + "px";
-                    editor.style.height = Math.max(100, editor.scrollHeight + diff) + 'px';
+                    resize();
                 });
-
+                setTimeout(resize, 50)
             },
             properties: {
-                title: "",
-                slug: "",
-                tags: "",
-                markdown: "",
-                html: "",
                 submit: event => {
                     event.preventDefault();
                     const article = {

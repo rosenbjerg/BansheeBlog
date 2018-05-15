@@ -1,16 +1,8 @@
 <script type="text/template" data-template id="article-view" >
     <div class="flex two three-500">
         <div>
-            <label>
-                Markdown
-                <textarea data-bindings="markdown" id="markdown-editor" rows="15"></textarea>
-            </label>
-            <input data-bindings="tags" type="text" placeholder="Tags (separated by space)">
-            <label>
-                <input type="checkbox" data-bindings="public">
-                <span class="checkable">Public</span>
-            </label>
-            <button data-bindings="submit -> onclick">Save article</button>
+            <span>Articles</span>
+            <ul data-bindings="articles -> innerHTML, articlesClicked -> onclick"></ul>
         </div>
         <div>
             <label>Preview</label>
@@ -22,11 +14,31 @@
 <script type="text/javascript" data-behaviour for="article-view">
     function onBind() {
         return {
-            afterBind: () => {
-                const articles = request("GET", "/admin/articles")
+            afterBind: async () => {
+                const articles = await request("GET", "/admin/articles");
+                this.articleCache = Object.create(null);
+                this.articles = articles.map(article => {
+                    this.articleCache[article.Slug] = article;
+                    return `<li class="pseudo button" data-slug='${article.Slug}'>${article.Title}</li>`;
+                }).join("");
             },
             properties: {
-                
+                articlesClicked: event => {
+                    if (!event.target.matches("li[data-slug]")) {
+                        return;
+                    }
+                    const article = this.articleCache[event.target.dataset.slug];
+                    const bindingContext = {
+                        title: article.Title,
+                        slug: article.Slug,
+                        markdown: article.Markdown,
+                        html: article.Html,
+                        tags: article.Tags.join(" "),
+                        public: article.Public,
+                    };
+                    console.log(bindingContext);
+                    dataBinder.render('article-editor', 'content', bindingContext);
+                }
             }
         };
     }

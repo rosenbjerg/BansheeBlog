@@ -15,6 +15,7 @@ using FileMode = System.IO.FileMode;
 
 namespace BansheeBlog
 {
+
     class Program
     {
         static void Main(string[] args)
@@ -48,10 +49,17 @@ namespace BansheeBlog
             server.Get("/", async (req, res) =>
             {
                 var path = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
+//                var blogPosts = db.GetCollection<BlogPost>()
+//                    .Find(
+//                        Query.And(Query.All(nameof(BlogPost.Created), Query.Descending),
+//                            Query.EQ(nameof(BlogPost.Public), true)), limit: 5)
+//                    .OrderByDescending(bp => bp.Created).ToList();
+
+                
                 var blogPosts = db.GetCollection<BlogPost>()
                     .Find(Query.All(nameof(BlogPost.Created), Query.Descending), limit: 5)
                     .OrderByDescending(bp => bp.Created).ToList();
-
+                
                 foreach (var blogPost in blogPosts)
                 {
                     Utils.Lighten(blogPost);
@@ -104,7 +112,7 @@ namespace BansheeBlog
                 post.Html = CommonMark.CommonMarkConverter.Convert(post.Markdown);
 
                 db.GetCollection<BlogPost>().Insert(post);
-                
+
                 await res.SendStatus(HttpStatusCode.OK);
             });
             server.Put("/admin/article/", async (req, res) =>
@@ -136,18 +144,15 @@ namespace BansheeBlog
                 var deleted = db.GetCollection<BlogPost>().Delete(bp => bp.Slug == urlTitle);
                 await res.SendStatus(deleted == 1 ? HttpStatusCode.OK : HttpStatusCode.NotFound);
             });
-            
-            server.Get("/admin/settings", async (req, res) =>
-            {
-                await res.SendJson(settings);
-            });
+
+            server.Get("/admin/settings", async (req, res) => { await res.SendJson(settings); });
             server.Post("/admin/settings", async (req, res) =>
             {
                 settings = await req.ParseBodyAsync<Settings>();
                 File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings));
                 await res.SendStatus(HttpStatusCode.OK);
             });
-            
+
             server.Get("/admin/themes", async (req, res) =>
             {
                 var themeDirs = Directory.EnumerateDirectories(config.ThemeDirectory)

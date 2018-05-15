@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BansheeBlog CMS</title>
+    <title>BansheeBlog Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic@6.5.0/picnic.css">
@@ -49,14 +49,25 @@
             margin-left: 5px;
             content: 'Slug: ';
         }
-
+        ul, li {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
         input, textarea {
             border-radius: 1px;
+        }
+        .article-item {
+            
         }
         .preview {
             padding: 2px 8px;
             /*background-color: #F5F5F5;*/
             border-radius: 2px;
+        }
+        .preview img {
+            max-width: 100%;
+            max-height: 100%;
         }
         .preview p, #article-editor {
             font-size: 1rem;
@@ -116,8 +127,8 @@
     allArticlesButton.onclick = () => dataBinder.render("article-view", "content");
     settingsButton.onclick = () => dataBinder.render("settings-editor", "content");
 
-    dataBinder.getTemplates("article-editor.html", "settings-editor.html", "article-view.html").then(() => {
-        dataBinder.render("article-editor", "content");
+    dataBinder.get("article-editor.html", "settings-editor.html", "article-view.html").then(() => {
+        dataBinder.render("article-view", "content");
     });
 </script>
 </body>

@@ -382,7 +382,7 @@
         }
     }
 
-    function initFields(bindingContext) {
+    function initBindingContext(bindingContext) {
         bindingContext.onPropertyChanged = onPropertyChanged.bind(bindingContext);
         bindingContext._map = new WeakMap();
         bindingContext._bindings = Object.create(null);
@@ -393,7 +393,7 @@
     }
 
     /**
-     * Sets up the binding between a bindingContext
+     * Sets up the binding between a bindingContext.
      *
      * @param {Object} bindingContext       The bindingContext.
      * @param {Element} domElement          The view-template.
@@ -405,11 +405,11 @@
                 domElement.innerHTML = html;
                 setTimeout(() => {
                     domElement.bindingContext = bindingContext;
+                    const props = Object.getOwnPropertyNames(bindingContext);
                     if (bindingContext.onPropertyChanged === undefined) {
-                        const props = Object.getOwnPropertyNames(bindingContext);
-                        initFields(bindingContext);
-                        indexBindingContext(bindingContext, props);
+                        initBindingContext(bindingContext);
                     }
+                    indexBindingContext(bindingContext, props);
                     indexDomElement(bindingContext, domElement);
                     accept();
                 }, 0);
@@ -460,7 +460,7 @@
             this.registerTemplate = this.registerTemplate.bind(this);
             this.render = this.render.bind(this);
 
-            this.getTemplates = this.getTemplates.bind(this);
+            this.get = this.get.bind(this);
 
             this.addTemplate = this.addTemplate.bind(this);
             this.addTemplateFromElement = this.addTemplateFromElement.bind(this);
@@ -524,7 +524,7 @@
          * @param {String} urls           The url of the file(s) containing the view-templates.
          * @return {Promise} accept is triggered when all templates in external resources has been loaded into the manager.
          */
-        getTemplates(...urls) {
+        get(...urls) {
             const promises = urls.map(url => {
                 return new Promise((accept, reject) => {
                     const xhr = new XMLHttpRequest();
@@ -582,8 +582,8 @@
 
         /**
          * Add a view-template from the id of a HTMLElement in the DOM, and register it to this manager using the same id.
-         * Gets a reference to the HTMLElemnt using document.getElementById and uses the innerHTML it, like addTemplateFromElement.
-         * @param {String} id           The id of the HTMLElement in the DOM, and to assign to the view-template.
+         * Gets a reference to the HTMLElemnt using document.getElementById and uses the innerHTML from it, like addTemplateFromElement.
+         * @param {String} id           The id to assign to the view-template.
          * @return {ViewTemplate}       The newly created view-template.
          */
         addTemplateById(id) {
