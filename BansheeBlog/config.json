@@ -1,7 +1,0 @@
-{
-  "DatabaseFilePath": "./database.sqlite",
-  "Port": 5420,
-  "PublicDirectory": "public",
-  "ThemeDirectory": "themes",
-  "ActiveTemplate": "default"
-}
