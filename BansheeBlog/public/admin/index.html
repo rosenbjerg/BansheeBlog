@@ -58,11 +58,28 @@
             border-radius: 1px;
         }
         .article-item {
-            
+            margin: 0;
+            padding: 4px;
+            background-color: #FAFAFA;
+        }
+        .article-item:nth-child(odd) {
+            background-color: #EEEEEE;
+        }
+        .article-item:hover {
+            background-color: #E0E0E0;
+            transition: background-color 200ms;
+        }
+        .article-item > i {
+            float: right;
+            cursor: pointer;
+        }
+        #article-list:empty:after {
+            content: 'No articles created yet';
+            color: var(--weak-font-color);
+            font-size: 12pt;
         }
         .preview {
             padding: 2px 8px;
-            /*background-color: #F5F5F5;*/
             border-radius: 2px;
         }
         .preview img {
@@ -75,6 +92,7 @@
             overflow-y: hidden;
         }
         .preview:empty:after {
+            padding: 0;
             content: 'Write some markup';
             font-size: 10pt;
             color: var(--weak-font-color);
@@ -102,7 +120,9 @@
         return new Promise((accept, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open(type, url, true);
-            xhr.setRequestHeader("Content-Type", "application/json");
+            if (data) {
+                xhr.setRequestHeader("Content-Type", "application/json");
+            }
             xhr.onload = e => {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200 || xhr.status === 201) {

@@ -1,5 +1,5 @@
 {
-  "LiteDbConnectionString": "Filename=database.litedb",
+  "DatabaseFilePath": "./database.sqlite",
   "Port": 5420,
   "PublicDirectory": "public",
   "ThemeDirectory": "themes",

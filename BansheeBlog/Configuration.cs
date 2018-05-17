@@ -6,7 +6,7 @@ namespace BansheeBlog
 {
     class Configuration
     {
-        public string LiteDbConnectionString { get; set; } 
+        public string DatabaseFilePath { get; set; } 
         public int Port { get; set; }
         public string PublicDirectory { get; set; }
         public string ThemeDirectory { get; set; } 
