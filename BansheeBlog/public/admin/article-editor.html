@@ -1,4 +1,4 @@
-<script type="text/template" data-template id="article-editor">
+<script type="text/template" data-template id="article-editor" >
     <div class="one-800">
         <input data-bindings="title" class="" type="text" placeholder="Article title">
         <i data-bindings="slug" class="article-slug"></i>
@@ -29,25 +29,13 @@
             afterBind: () => {
                 let parser = undefined;
                 let renderer = undefined;
-                const slugify = input => {
-                    return input.toLowerCase()
+                this.onPropertyChanged("title", (sender, value) => {
+                    this.slug = value.toString().toLowerCase()
                         .replace(/\s+/g, '-')           // Replace spaces with -
                         .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
                         .replace(/\-\-+/g, '-')         // Replace multiple - with single -
                         .replace(/^-+/, '')             // Trim - from start of text
                         .replace(/-+$/, '');            // Trim - from end of text
-                };
-                const renderMarkdown = () => {
-                    if (parser === undefined) {
-                        parser = new commonmark.Parser();
-                        renderer = new commonmark.HtmlRenderer();
-                    }
-                    let parsed = parser.parse(this.markdown);
-                    this.html = renderer.render(parsed);
-                };
-
-                this.onPropertyChanged("title", (sender, value) => {
-                    this.slug = slugify(value);
                 });
 
                 const editor = document.getElementById('markdown-editor');
@@ -58,29 +46,29 @@
                     editor.style.height = 0 + "px";
                     editor.style.height = Math.max(100, editor.scrollHeight + diff) + 'px';
                 };
-
+                
                 this.onPropertyChanged("markdown", (sender, value) => {
-                    renderMarkdown(value);
+                    if (parser === undefined) {
+                        parser = new commonmark.Parser();
+                        renderer = new commonmark.HtmlRenderer();
+                    }
+                    let parsed = parser.parse(value);
+                    this.html = renderer.render(parsed);
                     resize();
                 });
-                setTimeout(() => {
-                    renderMarkdown(this.markdown);
-                    resize();
-                }, 50)
+                setTimeout(resize, 50)
             },
             properties: {
                 submit: event => {
                     event.preventDefault();
                     const article = {
-                        Title: this.title,
-                        Slug: this.slug,
-                        Tags: this.tags,
-                        Markdown: this.markdown,
-                        Public: this.public,
-                        Id: this.id
+                        title: this.title,
+                        slug: this.slug,
+                        tags: this.tags.split(" "),
+                        markdown: this.markdown
                     };
-                    request("PUT", "/admin/article", article).then(() => {
-                        console.log("saved article");
+                    request("POST", "/admin/article", article).then(() => {
+                        console.log("article posted");
                     });
                 }
             }

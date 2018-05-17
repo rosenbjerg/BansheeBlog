@@ -13,7 +13,6 @@ namespace BansheeBlog
         public string BlogUrl { get; set; } = "http://localhost:5420/";
         public string ActiveTheme { get; set; } = "default";
         public string GoogleAnalyticsTrackingId { get; set; } = "";
-        public bool UseServerSideTracking { get; set; }
         
         public static Settings Load(string filepath)
         {
