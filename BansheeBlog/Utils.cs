@@ -7,11 +7,10 @@ namespace BansheeBlog
     {
         private static readonly Regex FirstParagraphRegex = new Regex("(<p>[\\s\\S]*?<\\/p>)", RegexOptions.Compiled);
 
-        public static void Lighten(BlogPost post)
+        public static string FirstParagraph(string content)
         {
-            post.Markdown = "";
-            var firstParagraph = FirstParagraphRegex.Match(post.Html);
-            post.Html = post.Html.Substring(0, firstParagraph.Index + firstParagraph.Length);
+            var firstParagraph = FirstParagraphRegex.Match(content);
+            return content.Substring(0, firstParagraph.Index + firstParagraph.Length);
         }
 
         public static string CreateUrlTitle(string title)
