@@ -1,5 +1,5 @@
-database.sqlite
-DotSettings.user
+#database.sqlite
+#DotSettings.user
 # Created by https://www.gitignore.io/api/node,webstorm,visualstudio
 
 ### Node ###
