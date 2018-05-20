@@ -19,7 +19,7 @@ namespace BansheeBlog
         public string Username { get; set; }
         public string Password { get; set; }
     }
-    
+
     class Program
     {
         static void Main(string[] args)
@@ -39,10 +39,14 @@ namespace BansheeBlog
             };
             server.Use(new CookieSessions<User>(sessionSettings));
             
-            var sdb = new SQLiteAsyncConnection(config.DatabaseFilePath);
-            Task.WaitAll(sdb.CreateTableAsync<Article>(), 
-                sdb.CreateTableAsync<ArticleHtml>(),
-                sdb.CreateTableAsync<ArticleMarkdown>());
+            var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
+
+            db.DropTableAsync<User>().Wait();
+            
+            Task.WaitAll(db.CreateTableAsync<User>(), 
+                db.CreateTableAsync<Article>(),
+                db.CreateTableAsync<ArticleHtml>(),
+                db.CreateTableAsync<ArticleMarkdown>());
 
             var partials = new[] {"header", "footer", "navigation", "meta", "style"};
             foreach (var partial in partials)
@@ -64,7 +68,7 @@ namespace BansheeBlog
             {
                 var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
 
-                var articles = await sdb.Table<Article>()
+                var articles = await db.Table<Article>()
                     .Where(article => article.Public)
                     .OrderByDescending(article => article.Created)
                     .Take(5)
@@ -81,7 +85,7 @@ namespace BansheeBlog
             server.Get("/:slug", async (req, res) =>
             {
                 var slug = req.Parameters["slug"];
-                var article = await sdb.FindAsync<Article>(arti => arti.Slug == slug);
+                var article = await db.FindAsync<Article>(arti => arti.Slug == slug);
                 if (article == null)
                 {
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "error.hbs");
@@ -95,7 +99,7 @@ namespace BansheeBlog
                 }
                 else
                 {
-                    var htmlContent = await sdb.FindAsync<ArticleHtml>(arti => arti.Id == article.Id);
+                    var htmlContent = await db.FindAsync<ArticleHtml>(arti => arti.Id == article.Id);
                     article.Html = htmlContent.Content;
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "article.hbs");
                     await res.RenderTemplate(templatePath, new
@@ -106,33 +110,88 @@ namespace BansheeBlog
                     });
                 }
             });
-
-            server.Get("/admin/", async (req, res) => { await res.SendFile("./public/admin/index.js"); });
+            
+            server.Post("/login", async (req, res) =>
+            {
+                var credentials = await req.ParseBodyAsync<User>();
+                var user = await db.FindAsync<User>(u => u.Username == credentials.Username);
+                
+                if (user == null || !BCrypt.Net.BCrypt.Verify(credentials.Password, user.Password))
+                {
+                    await res.SendStatus(HttpStatusCode.BadRequest);
+                    return;
+                }
+                
+                req.OpenSession(user);
+                await res.SendStatus(HttpStatusCode.OK);
+            });
+            
+            server.Get("/admin/verify", async (req, res) => await res.SendStatus(HttpStatusCode.OK));
             
             server.Get("/admin/articles", async (req, res) =>
             {
-                var articles = await sdb.Table<Article>().ToListAsync();
+                var articles = await db.Table<Article>().ToListAsync();
                 await res.SendJson(articles);
             });
 
             server.Get("/admin/article/:id", async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
-                var article = await sdb.FindAsync<Article>(arti => arti.Id == articleId);
+                var article = await db.FindAsync<Article>(arti => arti.Id == articleId);
                 await res.SendJson(article);
             });
+            
             server.Get("/admin/article/:id/markdown", async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
-                var articleMarkup = await sdb.FindAsync<ArticleMarkdown>(arti => arti.Id == articleId);
+                var articleMarkup = await db.FindAsync<ArticleMarkdown>(arti => arti.Id == articleId);
                 await res.SendJson(articleMarkup);
+            });
+
+            void CopyMeta(Article existing, Article updated)
+            {
+                existing.Edited = DateTime.UtcNow;
+                existing.Title = updated.Title;
+                existing.Slug = updated.Slug;
+                existing.Tags = updated.Tags;
+                if (existing.Public != updated.Public)
+                {
+                    existing.Published = updated.Public ? DateTime.UtcNow : existing.Published;
+                }
+
+                existing.Public = updated.Public;
+            }
+
+            server.Put("/admin/article/meta", async (req, res) =>
+            {
+                var updatedArticle = await req.ParseBodyAsync<Article>();
+                
+                if (await db.FindAsync<Article>(arti =>
+                        arti.Slug == updatedArticle.Slug && arti.Id != updatedArticle.Id) != null)
+                {
+                    const string msg = "Another article with the same slug already exists";
+                    await res.SendString(msg, status: HttpStatusCode.BadRequest);
+                    return;
+                }
+                
+                var existingArticle = await db.FindAsync<Article>(arti => arti.Id == updatedArticle.Id);
+                if (existingArticle == null)
+                {
+                    const string msg = "Could not find an existing article with the specified id";
+                    await res.SendString(msg, status: HttpStatusCode.BadRequest);
+                    return;
+                }
+
+                CopyMeta(existingArticle, updatedArticle);
+                
+                await db.UpdateAsync(existingArticle);
             });
             
             server.Put("/admin/article", async (req, res) =>
             {
                 var updatedArticle = await req.ParseBodyAsync<Article>();
 
-                if (await sdb.FindAsync<Article>(arti =>
+                if (await db.FindAsync<Article>(arti =>
                         arti.Slug == updatedArticle.Slug && arti.Id != updatedArticle.Id) != null)
                 {
                     const string msg = "Another article with the same slug already exists";
@@ -146,7 +205,7 @@ namespace BansheeBlog
                 var newArticle = updatedArticle.Id == Guid.Empty;
                 if (!newArticle)
                 {
-                    article = await sdb.FindAsync<Article>(arti => arti.Id == updatedArticle.Id);
+                    article = await db.FindAsync<Article>(arti => arti.Id == updatedArticle.Id);
 
                     if (article == null)
                     {
@@ -155,8 +214,8 @@ namespace BansheeBlog
                         return;
                     }
 
-                    articleHtml = await sdb.FindAsync<ArticleHtml>(arti => arti.Id == updatedArticle.Id);
-                    articleMarkdown = await sdb.FindAsync<ArticleMarkdown>(arti => arti.Id == updatedArticle.Id);
+                    articleHtml = await db.FindAsync<ArticleHtml>(arti => arti.Id == updatedArticle.Id);
+                    articleMarkdown = await db.FindAsync<ArticleMarkdown>(arti => arti.Id == updatedArticle.Id);
                 }
                 else
                 {
@@ -165,11 +224,8 @@ namespace BansheeBlog
                     articleMarkdown = new ArticleMarkdown {Id = article.Id};
                 }
 
-                article.Edited = DateTime.UtcNow;
-                article.Title = updatedArticle.Title;
-                article.Slug = updatedArticle.Slug;
-                article.Tags = updatedArticle.Tags;
-
+                CopyMeta(article, updatedArticle);
+                
                 articleMarkdown.Content = updatedArticle.Markdown;
                 articleHtml.Content = CommonMark.CommonMarkConverter.Convert(updatedArticle.Markdown);
 
@@ -177,21 +233,15 @@ namespace BansheeBlog
                 article.Html = firstParagraph;
                 article.Markdown = "";
 
-                if (article.Public != updatedArticle.Public)
-                {
-                    article.Published = updatedArticle.Public ? DateTime.UtcNow : article.Published;
-                }
-
-                article.Public = updatedArticle.Public;
 
 
                 if (newArticle)
                 {
-                    await sdb.InsertAllAsync(new object[] {article, articleHtml, articleMarkdown});
+                    await db.InsertAllAsync(new object[] {article, articleHtml, articleMarkdown});
                 }
                 else
                 {
-                    await sdb.UpdateAllAsync(new object[] {article, articleHtml, articleMarkdown});
+                    await db.UpdateAllAsync(new object[] {article, articleHtml, articleMarkdown});
                 }
 
                 await res.SendStatus(HttpStatusCode.OK);
@@ -201,11 +251,11 @@ namespace BansheeBlog
                 var article = await req.ParseBodyAsync<Article>();
                 var articleHtml = new ArticleHtml {Id = article.Id};
                 var articleMarkdown = new ArticleMarkdown {Id = article.Id};
-                var deleted = await sdb.DeleteAsync(article);
-                await Task.WhenAll(sdb.DeleteAsync(articleHtml), sdb.DeleteAsync(articleMarkdown));
+                
+                var deleted = await db.DeleteAsync(article);
+                await Task.WhenAll(db.DeleteAsync(articleHtml), db.DeleteAsync(articleMarkdown));
                 await res.SendStatus(deleted > 1 ? HttpStatusCode.OK : HttpStatusCode.NotFound);
             });
-
             server.Get("/admin/settings", async (req, res) => { await res.SendJson(settings); });
             server.Post("/admin/settings", async (req, res) =>
             {

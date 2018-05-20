@@ -1,0 +1,54 @@
+<script type="text/template" data-template id="login-view">
+    <div class="login-form">
+        <input type="text" data-bindings="username">
+        <span>
+            <input type="password" data-bindings="password, passwordMode -> type">            
+            <i class="material-icons toggle toggled-off" data-bindings="togglePassword -> onclick, passwordButtonIcon -> innerText">visibility</i>
+        </span>
+        <button data-bindings="login -> onclick">Login</button>
+    </div>
+</script>
+
+<script type="text/css" data-style for="login-view">
+    .login-form {
+        
+    }
+</script>
+
+<script type="text/javascript" data-behaviour for="login-view">
+    function onBind() {
+        return {
+            afterBind: () => {
+                request("GET", "/admin/verify").then(() => {
+                    dataBinder.render("article-view", "content");
+                });
+            },
+            properties: {
+                username: "",
+                password: "",
+                passwordMode: "password",
+                passwordButtonIcon: "visibility",
+                togglePassword: () => {
+                    if (this.passwordMode === "password"){
+                        this.passwordMode = "text";
+                        this.passwordButtonIcon = "visibility_off";
+                    } 
+                    else {
+                        this.passwordMode = "password";
+                        this.passwordButtonIcon = "visibility";
+                    }
+                },
+                login: () => {
+                    const credentials = {
+                        username: this.username,
+                        password: this.password
+                    };
+                    request("POST", "/admin/login", credentials).then(() => {
+                        dataBinder.render("article-view", "content");
+                    });
+                }
+                
+            }
+        };
+    }
+</script>

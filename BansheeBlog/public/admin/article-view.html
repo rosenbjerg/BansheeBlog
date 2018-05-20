@@ -9,12 +9,6 @@
     function onBind() {
         return {
             afterBind: async () => {
-                const createElement = (tag, cls, html) => {
-                    const element = document.createElement(tag);
-                    element.className = cls;
-                    if (html) element.innerHTML = html;
-                    return element;
-                };
 
                 const editArticle = article => {
                     request("GET", `/admin/article/${article.Id}/markdown`).then(markdown => {
@@ -34,20 +28,21 @@
                 };
 
                 const articleList = document.getElementById("article-list");
+                console.log(articleList, articleList.attributes);
                 
                 const articles = await request("GET", "/admin/articles");
                 
                 for (const article of articles) {
-                    const articleElement = createElement("li", "article-item", article.Title);
-                    const deleteButton = createElement("i", "material-icons", "delete");
-                    const editButton = createElement("i", "material-icons", "create");
-                    const publicButton = createElement("i", "material-icons toggled-off", "public");
+                    const articleElement = h("li", "article-item", article.Title);
+                    const deleteButton = createElement("i", {className: "material-icons", innerHTML: "delete"});
+                    const editButton = createElement("i", {className: "material-icons", innerHTML: "create"});
+                    const publicButton = createElement("i", {className: "material-icons toggle toggled-off", innerHTML: "public"});
                     
                     deleteButton.onclick = () => deleteArticle(article);
                     editButton.onclick = () => editArticle(article);
                     publicButton.onclick = () => {
                         article.Public = !article.Public;
-                        request("PUT", "/admin/article", article).then(() => {
+                        request("PUT", "/admin/article/meta", article).then(() => {
                             if (article.Public) {
                                 publicButton.classList.remove("toggled-off");
                             }

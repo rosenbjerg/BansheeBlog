@@ -4,7 +4,9 @@
             (global.dataBinder = factory());
 }(this, (function () { 'use strict';
 
-    const viewRegex = /<view +template=['"]([\w-]+)['"]( +behaviours=['"]([\w-]+(, *[\w-]+)*)['"])? *\/?>(<\/view>)?/g;
+    const viewRegex = /<view +template=['"]([\w-]+)['"] *([\w'"= -]*) *\/?>(<\/view>)?/g;
+    const behaviourRegex = /behaviours?=['"] *([\w-]+( *[\w-]+)*) *['"]/;
+    const styleRegex = /styles?=['"] *([\w-]+( *[\w-]+)*) *['"]/;
 
     class ViewTemplate {
         /**
@@ -17,6 +19,7 @@
             const maps = {
                 viewNames: [],
                 behaviourNames: [],
+                styleNames: [],
                 html: []
             };
             let index = 0,
@@ -24,7 +27,14 @@
             while ((match = viewRegex.exec(html)) !== null) {
                 maps.viewNames.push(match[1]);
                 if (match[2]) {
-                    maps.behaviourNames.push(match[3].split(" "));
+                    const behavioursMatch = behaviourRegex.exec(match[2]);
+                    if (behavioursMatch) {
+                        maps.behaviourNames.push(...behavioursMatch[1].split(" ").filter(name => name !== ""));
+                    }
+                    const stylesMatch = styleRegex.exec(match[2]);
+                    if (stylesMatch) {
+                        maps.styleNames.push(...stylesMatch[1].split(" ").filter(name => name !== ""));
+                    }
                 }
                 maps.html.push(html.substring(index, match.index));
                 index = match.index + match[0].length;
@@ -44,12 +54,31 @@
          * @param {String} js                     The html for the view-behaviour.
          * @param {String} forView                The name of the view-template the behaviour should be a default for.
          */
-        constructor(name, js, forView = "") {
+        constructor(name, js, forView) {
             this.name = name;
-            if (forView != "") {
+            this.func = new Function("return " + js.trim())();
+            if (forView) {
                 this.for = forView;
             }
-            this.func = new Function("return " + js.trim())();
+        }
+    }
+
+    class ViewStyle {
+        /**
+         * Constructor for ViewTemplate.
+         *
+         * @param (String) name                   The name of the view-style.
+         * @param {String} css                    The css for the view-style.
+         * @param {String} forView                The name of the view-template the style should be a default for.
+         */
+        constructor(name, css, forView) {
+            if (name) {
+                this.name = name;
+            }
+            this.css = css;
+            if (forView) {
+                this.for = forView;
+            }
         }
     }
 
@@ -417,8 +446,9 @@
         });
     }
 
-    const ViewTemplateSelector = "script[type='text/template'][data-template]";
-    const ViewBehaviourSelector = "script[type='text/javascript'][data-behaviour]";
+    const ViewTemplateSelector = 'script[type="text/template"][data-template]';
+    const ViewBehaviourSelector = 'script[type="text/javascript"][data-behaviour]';
+    const ViewStyleSelector = 'script[type="text/css"][data-style]';
 
     function getInnerTemplates(domElement) {
         return Array.prototype.slice.call(domElement.querySelectorAll(ViewTemplateSelector)).filter(t => t.id !== undefined).map(t => {
@@ -438,12 +468,34 @@
         }, []);
     }
 
-    function renderHtml(viewTemplate, manager, behaviours = []) {
+    function getInnerStyles(domElement) {
+        return Array.prototype.slice.call(domElement.querySelectorAll(ViewStyleSelector)).reduce((acc, cur) => {
+            const id = cur.id,
+                forView = cur.getAttribute("for");
+            if (id || forView) {
+                const style = new ViewStyle(id, cur.textContent, forView);
+                acc.push(style);
+                return acc;
+            }
+        }, []);
+    }
+
+    function renderHtml(viewTemplate, manager, behaviours = [], styles = []) {
         behaviours.push(...viewTemplate._maps.behaviourNames.map(name => manager.behaviours[name]));
+        styles.push(...viewTemplate._maps.styleNames.map(name => manager.styles[name]));
         const html = viewTemplate._maps.viewNames.reduce((output, viewName, i) => {
-            return output + renderHtml(manager.templates[viewName], manager, behaviours).html + viewTemplate._maps.html[i + 1];
+            return output + renderHtml(manager.templates[viewName], manager, behaviours, styles).html + viewTemplate._maps.html[i + 1];
         }, viewTemplate._maps.html[0]);
-        return { html, behaviours: behaviours };
+        return { html, behaviours, styles };
+    }
+
+    function applyStyle(style) {
+        const id = "style-for-" + style.for || style.name;
+        if (document.getElementById(id)) return;
+        const styleElement = document.createElement("style");
+        styleElement.id = id;
+        styleElement.textContent = style.css;
+        document.head.appendChild(styleElement);
     }
 
     class ViewTemplateManager {
@@ -454,10 +506,14 @@
             this.templates = Object.create(null);
             this.behaviours = Object.create(null);
             this.defaultBehaviours = Object.create(null);
+            this.styles = Object.create(null);
+            this.defaultStyles = Object.create(null);
 
+            this.registerTemplate = this.registerTemplate.bind(this);
             this.registerBehaviour = this.registerBehaviour.bind(this);
             this.attachBehaviours = this.attachBehaviours.bind(this);
-            this.registerTemplate = this.registerTemplate.bind(this);
+            this.registerStyle = this.registerStyle.bind(this);
+            this.attachStyles = this.attachStyles.bind(this);
             this.render = this.render.bind(this);
 
             this.get = this.get.bind(this);
@@ -471,11 +527,15 @@
             if (typeof domNode === 'string') {
                 domNode = document.getElementById(domNode);
             }
-            const { html, behaviours } = renderHtml(this.templates[viewTemplateName], this);
+            const { html, behaviours, styles } = renderHtml(this.templates[viewTemplateName], this);
 
             if (this.defaultBehaviours[viewTemplateName]) {
                 behaviours.push(...this.defaultBehaviours[viewTemplateName]);
             }
+            if (this.defaultStyles[viewTemplateName]) {
+                styles.push(...this.defaultStyles[viewTemplateName]);
+            }
+            new Set(styles).forEach(style => applyStyle(style));
             const afterBindCallbacks = [];
             for (const behaviour of new Set(behaviours)) {
                 const boundBehaviour = behaviour.func.call(bindingContext, bindingContext);
@@ -502,6 +562,16 @@
                 this.defaultBehaviours[viewTemplateName] = [];
             }
             this.defaultBehaviours[viewTemplateName].push(...behaviourFuncs);
+        }
+
+        registerStyle(name, style) {
+            this.styles[name] = style;
+        }
+        attachStyles(viewTemplateName, ...styles) {
+            if (this.defaultStyles[viewTemplateName] === undefined) {
+                this.defaultStyles[viewTemplateName] = [];
+            }
+            this.defaultStyles[viewTemplateName].push(...styles);
         }
 
         /**
@@ -536,9 +606,12 @@
                                 container.innerHTML = xhr.responseText;
                                 const templates = getInnerTemplates(container);
                                 const behaviours = getInnerBehaviours(container);
+                                const styles = getInnerStyles(container);
                                 container.remove();
-                                for (const template of templates) {
-                                    this.registerTemplate(template.name, template);
+                                templates.forEach(view => this.registerTemplate(view.name, view));
+                                for (const style of styles) {
+                                    if (style.name) this.registerStyle(style.name, style);
+                                    if (style.for) this.attachStyles(style.for, style);
                                 }
                                 for (const behaviour of behaviours) {
                                     if (behaviour.name) this.registerBehaviour(behaviour.name, behaviour);

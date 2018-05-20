@@ -103,6 +103,9 @@
         .material-icons {
             user-select: none;
         }
+        .toggle {
+            cursor: pointer;
+        }
         .material-icons.toggled-off {
             color: var(--weak-font-color);
         }
@@ -143,6 +146,11 @@
             xhr.send(JSON.stringify(data));
         });
     }
+    function createElement(tag, attributes) {
+        const element = document.createElement(tag);
+        Object.keys(a).forEach( k => element.setAttribute(k, attributes[k]) );
+        return element;
+    }
 
     const newArticleButton = document.getElementById("new-article");
     const allArticlesButton = document.getElementById("all-articles");
@@ -152,8 +160,8 @@
     allArticlesButton.onclick = () => dataBinder.render("article-view", "content");
     settingsButton.onclick = () => dataBinder.render("settings-editor", "content");
 
-    dataBinder.get("article-editor.html", "settings-editor.html", "article-view.html").then(() => {
-        dataBinder.render("article-view", "content");
+    dataBinder.get("article-editor.html", "settings-editor.html", "article-view.html", "login-view.html").then(() => {
+        dataBinder.render("login-view", "content");
     });
 </script>
 </body>
