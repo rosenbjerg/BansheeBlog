@@ -1,22 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
-using System.Xml.Schema;
 using HandlebarsDotNet;
-using LiteDB;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Red;
+using Red.CookieSessions;
 using Red.Extensions;
 using Red.HandlebarsRenderer;
 using SQLite;
-using FileMode = System.IO.FileMode;
 
 namespace BansheeBlog
 {
+    class User
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+    
     class Program
     {
         static void Main(string[] args)
@@ -29,12 +32,17 @@ namespace BansheeBlog
 
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
             
+            var sessionSettings = new CookieSessionSettings(TimeSpan.FromDays(2))
+            {
+                Secure = false,
+                ShouldAuthenticate = path => path.StartsWith("/admin/")
+            };
+            server.Use(new CookieSessions<User>(sessionSettings));
+            
             var sdb = new SQLiteAsyncConnection(config.DatabaseFilePath);
-
-            sdb.CreateTableAsync<Article>().Wait();
-            sdb.CreateTableAsync<ArticleHtml>().Wait();
-            sdb.CreateTableAsync<ArticleMarkdown>().Wait();
-//            var db = new LiteDatabase(config.DatabaseFilePath);
+            Task.WaitAll(sdb.CreateTableAsync<Article>(), 
+                sdb.CreateTableAsync<ArticleHtml>(),
+                sdb.CreateTableAsync<ArticleMarkdown>());
 
             var partials = new[] {"header", "footer", "navigation", "meta", "style"};
             foreach (var partial in partials)
@@ -52,31 +60,22 @@ namespace BansheeBlog
                 });
             }
 
-
             server.Get("/", async (req, res) =>
             {
-                try
-                {
-                    var path = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
+                var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
 
-                    var articles = await sdb.Table<Article>()
-                        .Where(article => article.Public)
-                        .OrderByDescending(article => article.Created)
-                        .Take(5)
-                        .ToListAsync();
+                var articles = await sdb.Table<Article>()
+                    .Where(article => article.Public)
+                    .OrderByDescending(article => article.Created)
+                    .Take(5)
+                    .ToListAsync();
 
-                    await res.RenderTemplate(path, new
-                    {
-                        Now = DateTime.UtcNow,
-                        Articles = articles,
-                        Settings = settings
-                    });
-                }
-                catch (Exception e)
+                await res.RenderTemplate(templatePath, new
                 {
-                    Console.WriteLine(e);
-                    throw;
-                }
+                    Now = DateTime.UtcNow,
+                    Articles = articles,
+                    Settings = settings
+                });
             });
 
             server.Get("/:slug", async (req, res) =>
@@ -96,6 +95,8 @@ namespace BansheeBlog
                 }
                 else
                 {
+                    var htmlContent = await sdb.FindAsync<ArticleHtml>(arti => arti.Id == article.Id);
+                    article.Html = htmlContent.Content;
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "article.hbs");
                     await res.RenderTemplate(templatePath, new
                     {
@@ -104,6 +105,14 @@ namespace BansheeBlog
                         Settings = settings
                     });
                 }
+            });
+
+            server.Get("/admin/", async (req, res) => { await res.SendFile("./public/admin/index.js"); });
+            
+            server.Get("/admin/articles", async (req, res) =>
+            {
+                var articles = await sdb.Table<Article>().ToListAsync();
+                await res.SendJson(articles);
             });
 
             server.Get("/admin/article/:id", async (req, res) =>
@@ -118,19 +127,7 @@ namespace BansheeBlog
                 var articleMarkup = await sdb.FindAsync<ArticleMarkdown>(arti => arti.Id == articleId);
                 await res.SendJson(articleMarkup);
             });
-            server.Get("/admin/article/:id/html", async (req, res) =>
-            {
-                var articleId = Guid.Parse(req.Parameters["id"]);
-                var articleHtml = await sdb.FindAsync<ArticleHtml>(arti => arti.Id == articleId);
-                await res.SendJson(articleHtml);
-            });
-
-            server.Get("/admin/articles", async (req, res) =>
-            {
-                var articles = await sdb.Table<Article>().ToListAsync();
-                await res.SendJson(articles);
-            });
-
+            
             server.Put("/admin/article", async (req, res) =>
             {
                 var updatedArticle = await req.ParseBodyAsync<Article>();
@@ -184,6 +181,7 @@ namespace BansheeBlog
                 {
                     article.Published = updatedArticle.Public ? DateTime.UtcNow : article.Published;
                 }
+
                 article.Public = updatedArticle.Public;
 
 
@@ -198,7 +196,6 @@ namespace BansheeBlog
 
                 await res.SendStatus(HttpStatusCode.OK);
             });
-
             server.Delete("/admin/article", async (req, res) =>
             {
                 var article = await req.ParseBodyAsync<Article>();

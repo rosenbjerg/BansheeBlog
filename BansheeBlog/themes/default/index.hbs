@@ -17,8 +17,7 @@
 <div class="container">
     {{> header}}
     {{> navigation}}
-    <main>
-        {{#each Articles}}
+    <main>{{#each Articles}}
             <article>
                 <a class="no-link-style" href="/{{Slug}}">
                     <p class="post-title"><b>{{Title}}</b></p>
@@ -28,8 +27,7 @@
                     {{{Html}}}
                 </section>
                 <a class="no-link-style post-content-short" href="/{{Slug}}">Read full article here →</a>
-            </article>
-        {{~/each}}
+            </article>{{~/each}}
     </main>
     {{> footer}}
 </div>

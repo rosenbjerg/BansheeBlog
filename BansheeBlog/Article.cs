@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using LiteDB;
 using SQLite;
 
 namespace BansheeBlog
@@ -35,6 +34,7 @@ namespace BansheeBlog
         [PrimaryKey] public Guid Id { get; set; } = Guid.NewGuid();
         public string Content { get; set; }
     }
+    
     class ArticleMarkdown
     {
         [PrimaryKey] public Guid Id { get; set; } = Guid.NewGuid();

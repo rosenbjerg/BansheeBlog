@@ -23,14 +23,14 @@
                             title: article.Title,
                             slug: article.Slug,
                             markdown: markdown.Content,
-                            tags: article.Tags,
+                            tags: article.Tags.split(",").join(" "),
                             public: article.Public
                         };
                         dataBinder.render('article-editor', 'content', bindingContext);
                     });
                 };
                 const deleteArticle = article => {
-                    
+
                 };
 
                 const articleList = document.getElementById("article-list");
@@ -41,12 +41,27 @@
                     const articleElement = createElement("li", "article-item", article.Title);
                     const deleteButton = createElement("i", "material-icons", "delete");
                     const editButton = createElement("i", "material-icons", "create");
+                    const publicButton = createElement("i", "material-icons toggled-off", "public");
                     
                     deleteButton.onclick = () => deleteArticle(article);
                     editButton.onclick = () => editArticle(article);
+                    publicButton.onclick = () => {
+                        article.Public = !article.Public;
+                        request("PUT", "/admin/article", article).then(() => {
+                            if (article.Public) {
+                                publicButton.classList.remove("toggled-off");
+                            }
+                            else {
+                                publicButton.classList.add("toggled-off");
+                            }
+                        })
+                        
+                    };
+                    
                     
                     articleElement.appendChild(deleteButton);
                     articleElement.appendChild(editButton);
+                    articleElement.appendChild(publicButton);
                     articleList.appendChild(articleElement);
                 }
             }

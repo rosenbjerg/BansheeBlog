@@ -74,7 +74,7 @@
                     const article = {
                         Title: this.title,
                         Slug: this.slug,
-                        Tags: this.tags,
+                        Tags: this.tags.split(" ").join(","),
                         Markdown: this.markdown,
                         Public: this.public,
                         Id: this.id
