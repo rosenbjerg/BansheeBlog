@@ -40,15 +40,6 @@
             margin: 0 auto;
             padding: 80px 0 0;
         }
-        .article-slug {
-            margin-top: -5px;
-            font-size: 10pt;
-            color: var(--weak-font-color);
-        }
-        .article-slug:not(:empty):before {
-            margin-left: 5px;
-            content: 'Slug: ';
-        }
         ul, li {
             padding: 0;
             margin: 0;
@@ -57,56 +48,15 @@
         input, textarea {
             border-radius: 1px;
         }
-        .article-item {
-            margin: 0;
-            padding: 4px;
-            background-color: #FAFAFA;
-        }
-        .article-item:nth-child(odd) {
-            background-color: #EEEEEE;
-        }
-        .article-item:hover {
-            background-color: #E0E0E0;
-            transition: background-color 200ms;
-        }
-        .article-item > i {
-            float: right;
-            cursor: pointer;
-        }
-        #article-list:empty:after {
-            content: 'No articles created yet';
-            color: var(--weak-font-color);
-            font-size: 12pt;
-        }
-        .preview {
-            padding: 2px 8px;
-            border-radius: 2px;
-        }
-        .preview img {
-            max-width: 100%;
-            max-height: 100%;
-        }
-        .preview p, #article-editor {
-            font-size: 1rem;
-            box-sizing: border-box;
-            overflow-y: hidden;
-        }
-        .preview:empty:after {
-            padding: 0;
-            content: 'Write some markup';
-            font-size: 10pt;
-            color: var(--weak-font-color);
-        }
-        .preview > :first-child {
-            margin-top: 0;
-        }
+        
         .material-icons {
             user-select: none;
+            transition: color 150ms;
         }
         .toggle {
             cursor: pointer;
         }
-        .material-icons.toggled-off {
+        .toggle.toggled-off {
             color: var(--weak-font-color);
         }
     </style>
@@ -146,10 +96,17 @@
             xhr.send(JSON.stringify(data));
         });
     }
-    function createElement(tag, attributes) {
-        const element = document.createElement(tag);
-        Object.keys(a).forEach( k => element.setAttribute(k, attributes[k]) );
-        return element;
+    function h(nodeName, attributes, ...args) {
+        let children = args.length ? [].concat(...args) : null;
+        return { nodeName, attributes, children };
+    }
+    function render(vnode) {
+        if (vnode.split) return document.createTextNode(vnode);
+        let n = document.createElement(vnode.nodeName);
+        let a = vnode.attributes || {};
+        Object.keys(a).forEach( k => n.setAttribute(k, a[k]) );
+        (vnode.children || []).forEach( c => n.appendChild(render(c)) );
+        return n;
     }
 
     const newArticleButton = document.getElementById("new-article");
@@ -160,8 +117,13 @@
     allArticlesButton.onclick = () => dataBinder.render("article-view", "content");
     settingsButton.onclick = () => dataBinder.render("settings-editor", "content");
 
-    dataBinder.get("article-editor.html", "settings-editor.html", "article-view.html", "login-view.html").then(() => {
-        dataBinder.render("login-view", "content");
+    const views = ["article-editor.html", "settings-editor.html", "article-view.html", "login-view.html"];
+    dataBinder.get(...views).then(() => {
+        request("GET", "/admin/verify").then(() => {
+            dataBinder.render("article-view", "content");
+        }).catch(() => {
+            dataBinder.render("login-view", "content");
+        });
     });
 </script>
 </body>

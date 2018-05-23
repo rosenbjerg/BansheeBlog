@@ -5,6 +5,30 @@
     </div>
 </script>
 
+<script type="text/css" data-style for="article-view">
+    .article-item {
+        margin: 0;
+        padding: 4px;
+        background-color: #FAFAFA;
+    }
+    .article-item:nth-child(odd) {
+        background-color: #EEEEEE;
+    }
+    .article-item:hover {
+        background-color: #E0E0E0;
+        transition: background-color 200ms;
+    }
+    .article-item > i {
+        float: right;
+        cursor: pointer;
+    }
+    #article-list:empty:after {
+        content: 'No articles created yet';
+        color: var(--weak-font-color);
+        font-size: 12pt;
+    }
+</script>
+
 <script type="text/javascript" data-behaviour for="article-view">
     function onBind() {
         return {
@@ -23,23 +47,39 @@
                         dataBinder.render('article-editor', 'content', bindingContext);
                     });
                 };
-                const deleteArticle = article => {
-
-                };
 
                 const articleList = document.getElementById("article-list");
-                console.log(articleList, articleList.attributes);
                 
                 const articles = await request("GET", "/admin/articles");
                 
                 for (const article of articles) {
-                    const articleElement = h("li", "article-item", article.Title);
-                    const deleteButton = createElement("i", {className: "material-icons", innerHTML: "delete"});
-                    const editButton = createElement("i", {className: "material-icons", innerHTML: "create"});
-                    const publicButton = createElement("i", {className: "material-icons toggle toggled-off", innerHTML: "public"});
+                    const articleElement = render(h("li", {class: "article-item"}, article.Title));
+                    const deleteButton = render(h("i", {class: "material-icons"}, "delete"));
+                    const editButton = render(h("i", {class: "material-icons"}, "create"));
+                    const publicButton = render(h("i", {class: "material-icons toggle" + (article.Public ? "" : " toggled-off")}, "public"));
+
+                    let deletePressed = 0;
+                    const setDeleteToNormal = () => {
+                        deleteButton.style.color = "inherit";
+                        deletePressed = 0;
+                    };
+                    deleteButton.onclick = () => {
+                        if (deletePressed === 0){
+                            deletePressed = 1;
+                            deleteButton.style.color = "#ef5350";
+                            setTimeout(setDeleteToNormal, 2000);
+                        }
+                        else if (deletePressed === 1){
+                            deletePressed = 2;
+                            deleteButton.style.color = "#b71c1c";
+                        }
+                        else {
+                            articleElement.remove();
+                        }
+                    };
                     
-                    deleteButton.onclick = () => deleteArticle(article);
                     editButton.onclick = () => editArticle(article);
+                    
                     publicButton.onclick = () => {
                         article.Public = !article.Public;
                         request("PUT", "/admin/article/meta", article).then(() => {

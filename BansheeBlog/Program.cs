@@ -22,6 +22,24 @@ namespace BansheeBlog
 
     class Program
     {
+        private static async void CreateFirstUser(SQLiteAsyncConnection db)
+        {
+            if (await db.Table<User>().FirstOrDefaultAsync() == null)
+            {
+                var password = Guid.NewGuid().ToString("N");
+                var admin = new User
+                {
+                    Username = "admin",
+                    Password = BCrypt.Net.BCrypt.HashPassword(password, 12)
+                };
+                await db.InsertAsync(admin);
+                
+                var print = $"username: {admin.Username}\npassword: {password}";
+                await File.WriteAllTextAsync("./credentials.txt", print);
+                Console.WriteLine("Credentials saved in '.credentials.txt'");
+            }
+        }
+        
         static void Main(string[] args)
         {
             const string configPath = "config.json";
@@ -31,19 +49,17 @@ namespace BansheeBlog
             var settings = Settings.Load(settingsPath);
 
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
-            
+
             var sessionSettings = new CookieSessionSettings(TimeSpan.FromDays(2))
             {
                 Secure = false,
                 ShouldAuthenticate = path => path.StartsWith("/admin/")
             };
             server.Use(new CookieSessions<User>(sessionSettings));
-            
+
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
 
-            db.DropTableAsync<User>().Wait();
-            
-            Task.WaitAll(db.CreateTableAsync<User>(), 
+            Task.WaitAll(db.CreateTableAsync<User>(),
                 db.CreateTableAsync<Article>(),
                 db.CreateTableAsync<ArticleHtml>(),
                 db.CreateTableAsync<ArticleMarkdown>());
@@ -110,24 +126,24 @@ namespace BansheeBlog
                     });
                 }
             });
-            
+
             server.Post("/login", async (req, res) =>
             {
                 var credentials = await req.ParseBodyAsync<User>();
                 var user = await db.FindAsync<User>(u => u.Username == credentials.Username);
-                
+
                 if (user == null || !BCrypt.Net.BCrypt.Verify(credentials.Password, user.Password))
                 {
                     await res.SendStatus(HttpStatusCode.BadRequest);
                     return;
                 }
-                
+
                 req.OpenSession(user);
                 await res.SendStatus(HttpStatusCode.OK);
             });
-            
+
             server.Get("/admin/verify", async (req, res) => await res.SendStatus(HttpStatusCode.OK));
-            
+
             server.Get("/admin/articles", async (req, res) =>
             {
                 var articles = await db.Table<Article>().ToListAsync();
@@ -140,7 +156,7 @@ namespace BansheeBlog
                 var article = await db.FindAsync<Article>(arti => arti.Id == articleId);
                 await res.SendJson(article);
             });
-            
+
             server.Get("/admin/article/:id/markdown", async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
@@ -158,22 +174,21 @@ namespace BansheeBlog
                 {
                     existing.Published = updated.Public ? DateTime.UtcNow : existing.Published;
                 }
-
                 existing.Public = updated.Public;
             }
 
             server.Put("/admin/article/meta", async (req, res) =>
             {
                 var updatedArticle = await req.ParseBodyAsync<Article>();
-                
-                if (await db.FindAsync<Article>(arti =>
-                        arti.Slug == updatedArticle.Slug && arti.Id != updatedArticle.Id) != null)
+
+                if (await db.FindAsync<Article>(
+                        arti => arti.Slug == updatedArticle.Slug && arti.Id != updatedArticle.Id) != null)
                 {
                     const string msg = "Another article with the same slug already exists";
                     await res.SendString(msg, status: HttpStatusCode.BadRequest);
                     return;
                 }
-                
+
                 var existingArticle = await db.FindAsync<Article>(arti => arti.Id == updatedArticle.Id);
                 if (existingArticle == null)
                 {
@@ -183,10 +198,11 @@ namespace BansheeBlog
                 }
 
                 CopyMeta(existingArticle, updatedArticle);
-                
+
                 await db.UpdateAsync(existingArticle);
+                await res.SendStatus(HttpStatusCode.OK);
             });
-            
+
             server.Put("/admin/article", async (req, res) =>
             {
                 var updatedArticle = await req.ParseBodyAsync<Article>();
@@ -225,14 +241,13 @@ namespace BansheeBlog
                 }
 
                 CopyMeta(article, updatedArticle);
-                
+
                 articleMarkdown.Content = updatedArticle.Markdown;
                 articleHtml.Content = CommonMark.CommonMarkConverter.Convert(updatedArticle.Markdown);
 
                 var firstParagraph = Utils.FirstParagraph(articleHtml.Content);
                 article.Html = firstParagraph;
                 article.Markdown = "";
-
 
 
                 if (newArticle)
@@ -251,7 +266,7 @@ namespace BansheeBlog
                 var article = await req.ParseBodyAsync<Article>();
                 var articleHtml = new ArticleHtml {Id = article.Id};
                 var articleMarkdown = new ArticleMarkdown {Id = article.Id};
-                
+
                 var deleted = await db.DeleteAsync(article);
                 await Task.WhenAll(db.DeleteAsync(articleHtml), db.DeleteAsync(articleMarkdown));
                 await res.SendStatus(deleted > 1 ? HttpStatusCode.OK : HttpStatusCode.NotFound);

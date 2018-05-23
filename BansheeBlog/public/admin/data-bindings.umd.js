@@ -51,12 +51,12 @@
          * Constructor for ViewTemplate.
          *
          * @param (String) name                   The name of the view-behaviour.
-         * @param {String} js                     The html for the view-behaviour.
+         * @param {Function} func                     The html for the view-behaviour.
          * @param {String} forView                The name of the view-template the behaviour should be a default for.
          */
-        constructor(name, js, forView) {
+        constructor(name, func, forView) {
             this.name = name;
-            this.func = new Function("return " + js.trim())();
+            this.func = func;
             if (forView) {
                 this.for = forView;
             }
@@ -446,9 +446,11 @@
         });
     }
 
-    const ViewTemplateSelector = 'script[type="text/template"][data-template]';
+    const ViewTemplateSelector = 'script[type="text/template"][data-template],template';
     const ViewBehaviourSelector = 'script[type="text/javascript"][data-behaviour]';
     const ViewStyleSelector = 'script[type="text/css"][data-style]';
+
+// const ViewStyleSelector = 'script[type="text/css"][data-style]';
 
     function getInnerTemplates(domElement) {
         return Array.prototype.slice.call(domElement.querySelectorAll(ViewTemplateSelector)).filter(t => t.id !== undefined).map(t => {
@@ -461,8 +463,13 @@
             const id = cur.id,
                 forView = cur.getAttribute("for");
             if (id || forView) {
-                const behaviour = new ViewBehaviour(id, cur.textContent, forView);
-                acc.push(behaviour);
+                try {
+                    const func = new Function("return " + cur.textContent.trim())();
+                    const behaviour = new ViewBehaviour(id, func, forView);
+                    acc.push(behaviour);
+                } catch (e) {
+                    console.error(`Could not parse javascript behaviour: ${id ? `id='${id}'` : ""} ${forView ? `for='${forView}'` : ""}`);
+                }
                 return acc;
             }
         }, []);
@@ -539,8 +546,12 @@
             const afterBindCallbacks = [];
             for (const behaviour of new Set(behaviours)) {
                 const boundBehaviour = behaviour.func.call(bindingContext, bindingContext);
-                Object.assign(bindingContext, boundBehaviour.properties);
-                afterBindCallbacks.push(boundBehaviour.afterBind);
+                if (boundBehaviour.properties) {
+                    Object.assign(bindingContext, boundBehaviour.properties);
+                }
+                if (boundBehaviour.afterBind) {
+                    afterBindCallbacks.push(boundBehaviour.afterBind);
+                }
             }
             bind(bindingContext, domNode, html).then(() => {
                 afterBindCallbacks.forEach(cb => cb());
@@ -567,6 +578,7 @@
         registerStyle(name, style) {
             this.styles[name] = style;
         }
+
         attachStyles(viewTemplateName, ...styles) {
             if (this.defaultStyles[viewTemplateName] === undefined) {
                 this.defaultStyles[viewTemplateName] = [];
