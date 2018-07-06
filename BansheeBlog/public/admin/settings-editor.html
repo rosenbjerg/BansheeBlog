@@ -1,42 +1,151 @@
 <script type="text/template" data-template id="settings-editor">
-    <div style="margin: 0 auto; max-width: 800px">
-        <h3>Blog settings</h3>
-        <fieldset>
-            <label>Title<input type="text" data-bindings="blogTitle"></label>
-            <label>Description<input type="text" data-bindings="blogDescription"></label>
-            <label>Author<input type="text" data-bindings="author"></label>
-        </fieldset>
-        <fieldset>
-            <label>Web address<input type="text" data-bindings="blogUrl" placeholder="https://example.com"></label>
-            <label>Google Analytics TrackingId<input type="text" data-bindings="googleAnalyticsTrackingId" placeholder="UA-XXXXX-Y" pattern="/^ua-\d{4,9}-\d{1,4}$/i"></label>
-        </fieldset>
-        <label>
-            Theme
-            <select data-bindings="themes -> innerHTML, activeTheme"></select>
-        </label>
-        <button data-bindings="save -> onclick, saveDisabled -> disabled">Save settings</button>
-        <span data-bindings="status"></span>
+    <div class="settings-view flat">
+        <div class="tabs four">
+            <input id="blog-settings-tab" type='radio' name='tabgroupB' checked/>
+            <label class="pseudo button toggle" for="blog-settings-tab">Blog</label>
+
+            <input id="theme-settings-tab" type='radio' name='tabgroupB'/>
+            <label class="pseudo button toggle" for="theme-settings-tab">Theme</label>
+
+            <input id="user-settings-tab" type='radio' name='tabgroupB'>
+            <label class="pseudo button toggle" for="user-settings-tab">User</label>
+
+            <input id="static-files-tab" type='radio' name='tabgroupB'>
+            <label class="pseudo button toggle" for="static-files-tab">Files</label>
+
+
+            <div class="row">
+                <div>
+                    <form data-bindings="blogSettingSubmitted">
+                        <fieldset>
+                            <label>Title<input type="text" data-bindings="blogTitle"></label>
+                            <label>Description<input type="text" data-bindings="blogDescription"></label>
+                            <label>Author<input type="text" data-bindings="author"></label>
+                        </fieldset>
+                        <fieldset>
+                            <label>Web address<input type="text" data-bindings="blogUrl"
+                                                     placeholder="https://example.com"></label>
+                            <label>Google Analytics TrackingId<input type="text"
+                                                                     data-bindings="googleAnalyticsTrackingId"
+                                                                     placeholder="UA-XXXXX-Y"
+                                                                     pattern="/^ua-\d{4,9}-\d{1,4}$/i"></label>
+                        </fieldset>
+                        <input type="submit" data-bindings="submitDisabled -> disabled" value="Save settings">
+                        <span data-bindings="status"></span>
+                    </form>
+
+
+                </div>
+
+                <div>
+                    <label>Themes</label>
+                    <ul data-bindings="themes -> children"></ul>    
+                    <label for="upload-theme-modal" class="button">Upload theme</label>
+                    
+                    <div class="modal">
+                        <input id="upload-theme-modal" type="checkbox"/>
+                        <label for="upload-theme-modal" class="overlay"></label>
+                        <article>
+                            <header>
+                                <h3>Upload theme archive</h3>
+                                <label for="upload-theme-modal" class="close">&times;</label>
+                            </header>
+                            <div class="content">
+                                <form data-bindings="themeSubmitted -> onsubmit">
+                                    <input type="file" name="themeArchive">
+                                    <input type="submit" data-bindings="submitDisabled -> disabled" value="Upload">
+                                </form>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <div>
+                    <form data-bindings="newPasswordSubmitted -> onsubmit">
+                        <label>Change password</label>
+                        <input type="password" data-bindings="oldPassword" name="oldPassword"
+                               placeholder="Current password" required>
+                        <input type="password" data-bindings="newPassword1" name="newPassword1"
+                               placeholder="New password" required>
+                        <input type="password" data-bindings="newPassword2" name="newPassword2"
+                               placeholder="Repeat new password" required>
+                        <input type="submit" data-bindings="submitDisabled -> disabled" value="Change password">
+                    </form>
+                </div>
+
+                <div>
+                    <input type="text" data-bindings="fileSearch" placeholder="Search">
+                    <ul class="file-list" data-bindings="files -> children"></ul>
+                    <form data-bindings="filesSubmitted -> onsubmit">
+                        <input type="file" name="files" multiple required>
+                        <input type="submit" data-bindings="submitDisabled -> disabled" value="Upload">
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
     </div>
+</script>
+
+<script type="text/css" data-style for="settings-editor">
+    .settings-view {
+        margin: 0 auto;
+        max-width: 800px;
+    }
+
+    .file-list {
+        list-style: none;
+        min-height: 300px;
+    }
+
+    .file-list:empty:after {
+        content: 'No files uploaded';
+        color: var(--weak-font-color);
+        font-size: var(--small-font-size);
+    }
 </script>
 
 <script type="text/javascript" data-behaviour for="settings-editor">
     function createBehaviour() {
         return {
-            afterBind: () => {
-                Promise.all([request("GET", "/admin/themes"), request("GET", "/admin/settings")]).then(values => {
-                    const themes = values[0], settings = values[1];
-                    this.themes = themes.map(theme => `<option>${theme}</option>`).join('');
-                    this.activeTheme = settings.ActiveTheme;
-                    this.blogTitle = settings.BlogTitle;
-                    this.blogDescription = settings.BlogDescription;
-                    this.author = settings.Author;
-                    this.blogUrl = settings.BlogUrl;
-                    this.googleAnalyticsTrackingId = settings.GoogleAnalyticsTrackingId;
-                });
+            afterBind: async () => {
+                const settings = await request("GET", "/admin/settings");
+                
+                this.activeTheme = settings.ActiveTheme;
+                this.blogTitle = settings.BlogTitle;
+                this.blogDescription = settings.BlogDescription;
+                this.author = settings.Author;
+                this.blogUrl = settings.BlogUrl;
+                this.googleAnalyticsTrackingId = settings.GoogleAnalyticsTrackingId;
+                
+                this.loadThemes();
+                this.loadFiles();
+
             },
             properties: {
-                save: async () => {
-                    this.saveDisabled = true;
+                selectTheme: theme => {
+                    console.log("selected " + theme);
+                },
+                loadThemes: () => {
+                    request("GET", "/admin/themes").then(themes => this.themes = themes.map(theme => {
+                        const toggled = (theme === this.activeTheme? "" : " toggled-off");
+                        const activateButton = h("i", {class: `material-icons toggle${toggled}`, onclick: () => this.selectTheme(theme)}, "checkmark");
+                        const deleteButton = h("i", {class: `material-icons`}, "delete");
+                        return render(h("li", {}, theme, deleteButton,  activateButton));
+                    }));
+                },
+                loadFiles: () => {
+                    request("GET", "/admin/files").then(files => this.files = files.map(file => {
+                        return  render(h("li", {}, file));
+                    }));
+                },
+                blogSettingSubmitted: ev => {
+                    ev.preventDefault();
+                    this.submitDisabled = true;
                     const settings = {
                         ActiveTheme: this.activeTheme,
                         BlogTitle: this.blogTitle,
@@ -45,12 +154,52 @@
                         BlogUrl: this.blogUrl,
                         GoogleAnalyticsTrackingId: this.googleAnalyticsTrackingId,
                     };
-                    await request("POST", "/admin/settings", settings);
-                    this.status = "Saved!";
-                    setTimeout(() => {
-                        this.status = "";
-                        this.saveDisabled = false;
-                    }, 700);
+                    request("POST", "/admin/settings", settings).then(() => {
+                        this.status = "Saved!";
+                        this.submitDisabled = false;
+                        setTimeout(() => {
+                            this.status = "";
+                        }, 700);
+                    }).catch(() => {
+                        this.submitDisabled = false;
+                    });
+                },
+                newPasswordSubmitted: ev => {
+                    ev.preventDefault();
+                    this.submitDisabled = true;
+                    const form = new FormData(ev.target);
+                    request("POST", "/admin/passwordchange", form, false).then(() => {
+                        ev.target.reset();
+                        this.submitDisabled = false;
+                    }).catch(() => {
+
+                        this.submitDisabled = false;
+                    });
+                },
+                filesSubmitted: ev => {
+                    ev.preventDefault();
+                    this.submitDisabled = true;
+                    const form = new FormData(ev.target);
+                    request("POST", "/admin/files", form, false).then(() => {
+                        ev.target.reset();
+                        this.submitDisabled = false;
+                    }).catch(() => {
+
+                        this.submitDisabled = false;
+                    });
+                },
+                themeSubmitted: ev => {
+                    ev.preventDefault();
+                    this.submitDisabled = true;
+                    const form = new FormData(ev.target);
+                    console.log(ev.target, form);
+                    request("POST", "/admin/theme", form, false).then(() => {
+                        ev.target.reset();
+                        this.loadThemes();
+                        this.submitDisabled = false;
+                    }).catch(() => {
+                        this.submitDisabled = false;
+                    });
                 }
             }
         };

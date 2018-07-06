@@ -1,31 +1,15 @@
 <script type="text/template" data-template id="article-view" >
-    <div style="margin: 0 auto; max-width: 800px">
+    <div style="margin: 0 auto; max-width: 800px" class="flat">
         <span>Articles</span>
-        <ul id="article-list"></ul>
+        <ul data-bindings="articleItems -> children"></ul>
     </div>
 </script>
 
 <script type="text/css" data-style for="article-view">
-    .article-item {
-        margin: 0;
-        padding: 4px;
-        background-color: #FAFAFA;
-    }
-    .article-item:nth-child(odd) {
-        background-color: #EEEEEE;
-    }
-    .article-item:hover {
-        background-color: #E0E0E0;
-        transition: background-color 200ms;
-    }
-    .article-item > i {
-        float: right;
-        cursor: pointer;
-    }
     #article-list:empty:after {
         content: 'No articles created yet';
         color: var(--weak-font-color);
-        font-size: 12pt;
+        font-size: var(--small-font-size);
     }
 </script>
 
@@ -47,12 +31,12 @@
                         dataBinder.render('article-editor', 'content', bindingContext);
                     });
                 };
-
-                const articleList = document.getElementById("article-list");
                 
                 const articles = await request("GET", "/admin/articles");
                 
-                for (const article of articles) {
+                
+
+                this.articleItems = articles.map(article => {
                     const articleElement = render(h("li", {class: "article-item"}, article.Title));
                     const deleteButton = render(h("i", {class: "material-icons"}, "delete"));
                     const editButton = render(h("i", {class: "material-icons"}, "create"));
@@ -77,9 +61,9 @@
                             articleElement.remove();
                         }
                     };
-                    
+
                     editButton.onclick = () => editArticle(article);
-                    
+
                     publicButton.onclick = () => {
                         article.Public = !article.Public;
                         request("PUT", "/admin/article/meta", article).then(() => {
@@ -90,15 +74,15 @@
                                 publicButton.classList.add("toggled-off");
                             }
                         })
-                        
+
                     };
-                    
-                    
+
+
                     articleElement.appendChild(deleteButton);
                     articleElement.appendChild(editButton);
                     articleElement.appendChild(publicButton);
-                    articleList.appendChild(articleElement);
-                }
+                    return articleElement;
+                });
             }
         };
     }

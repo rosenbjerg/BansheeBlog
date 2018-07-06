@@ -1,6 +1,6 @@
 <script type="text/template" data-template id="article-editor">
     <div class="one-800">
-        <input data-bindings="title" class="" type="text" placeholder="Article title">
+        <input data-bindings="title" class="article-title" type="text" placeholder="Article title">
         <i data-bindings="slug" class="article-slug"></i>
     </div>
     <div class="flex one two-800">
@@ -10,23 +10,28 @@
                 <textarea data-bindings="markdown" id="markdown-editor" rows="18"></textarea>
             </label>
             <input data-bindings="tags" type="text" placeholder="Tags (separated by space)">
-            <label>
-                <input type="checkbox" data-bindings="public">
-                <span class="checkable">Public</span>
-            </label>
-            <button data-bindings="submit -> onclick">Save article</button>
         </div>
         <div class="">
             <label>Preview</label>
-            <div data-bindings="html -> innerHTML" class="preview"></div>
+            <div data-bindings="html -> innerHTML" class="preview flat"></div>
+            <div class="row">
+
+                <label>
+                    <input type="checkbox" data-bindings="public">
+                    <span class="checkable">Public</span>
+                </label>
+                <button data-bindings="submit -> onclick">Save article</button>
+            </div>
         </div>
     </div>
 </script>
 
 <script type="text/css" data-style for="article-editor">
+    .article-title {
+        margin-bottom: 0;
+    }
     .article-slug {
-        margin-top: -5px;
-        font-size: 10pt;
+        font-size: var(--v-small-font-size);
         color: var(--weak-font-color);
     }
     .article-slug:not(:empty):before {
@@ -34,20 +39,23 @@
         content: 'Slug: ';
     }
     .preview {
-        padding: 2px 8px;
         border-radius: 2px;
     }
     .preview img {
         max-width: 100%;
         max-height: 100%;
     }
+    .preview, #markdown-editor {
+        overflow: auto;
+        height: 700px;
+    }
     .preview p, #markdown-editor {
-        font-size: 1rem;
+        font-size: var(--medium-font-size);
     }
     .preview:empty:after {
         padding: 0;
-        content: 'Write some markup';
-        font-size: 10pt;
+        content: 'Write some markdown';
+        font-size: var(--v-small-font-size);
         color: var(--weak-font-color);
     }
     .preview > :first-child {
@@ -70,6 +78,9 @@
                         .replace(/-+$/, '');            // Trim - from end of text
                 };
                 const renderMarkdown = () => {
+                    if (this.markdown === undefined) {
+                        return;
+                    }
                     if (parser === undefined) {
                         parser = new commonmark.Parser();
                         renderer = new commonmark.HtmlRenderer();
@@ -102,7 +113,6 @@
                 // }, 50)
             },
             properties: {
-                markdown: "",
                 submit: event => {
                     event.preventDefault();
                     const article = {

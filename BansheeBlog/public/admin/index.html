@@ -13,9 +13,15 @@
 
     <style>
         html, body {
-            background-color: #FAFAFA;
+            --background-color: #F5F5F5;
+            --foreground-color: #FFFFFF;
             --primary-font-color: #212121;
             --weak-font-color: #9E9E9E;
+            --small-font-size: 12pt;
+            --v-small-font-size: 10pt;
+            --medium-font-size: 1rem;
+            
+            background-color: var(--background-color);
         }
 
         .logo {
@@ -26,7 +32,7 @@
             display: inline-block;
         }
         nav div.pseudo {
-            user-select: none;
+            user-select: none;  
             cursor: pointer;
             display: inline-block;
             padding: 0.3em 0.3em;
@@ -36,19 +42,15 @@
             max-width: 100%;
         }
         section {
-            width: 90%;
+            width: 94%;
             margin: 0 auto;
-            padding: 80px 0 0;
+            padding: 70px 0 0;
         }
         ul, li {
             padding: 0;
             margin: 0;
             list-style: none;
         }
-        input, textarea {
-            border-radius: 1px;
-        }
-        
         .material-icons {
             user-select: none;
             transition: color 150ms;
@@ -58,6 +60,39 @@
         }
         .toggle.toggled-off {
             color: var(--weak-font-color);
+        }
+        input, select, textarea, .pseudo.button.toggle, .preview {
+            border-radius: 1px;
+            margin-bottom: 8px;
+        }
+        .flat {
+            padding: 12px;
+            background-color: var(--foreground-color);
+            border-radius: 1px;
+            border: 1px solid #CCCCCC;
+        }
+        .modal .content {
+            padding: 8px;
+        }
+        li {
+            margin: 0;
+            padding: 4px;
+            background-color: #FAFAFA;
+        }
+        li:nth-child(odd) {
+            background-color: #EEEEEE;
+        }
+        li:hover {
+            background-color: #E0E0E0;
+            transition: background-color 200ms;
+        }
+        li .material-icons {
+            float: right;
+            cursor: pointer;
+            width: 24px;
+        }
+        input[type=submit]:disabled, button:disabled {
+            background-color: var(--weak-font-color);
         }
     </style>
 </head>
@@ -74,11 +109,11 @@
     </section>
 </main>
 <script>
-    function request(type, url, data = null) {
+    function request(type, url, data = null, json = true) {
         return new Promise((accept, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open(type, url, true);
-            if (data) {
+            if (json) {
                 xhr.setRequestHeader("Content-Type", "application/json");
             }
             xhr.onload = e => {
@@ -93,7 +128,7 @@
                 }
             };
             xhr.onerror = () => reject(xhr.statusText, xhr);
-            xhr.send(JSON.stringify(data));
+            xhr.send((json ? JSON.stringify(data) : data));
         });
     }
     function h(nodeName, attributes, ...args) {
@@ -108,21 +143,24 @@
         (vnode.children || []).forEach( c => n.appendChild(render(c)) );
         return n;
     }
+    
+    const loggedIn = () => {
+        dataBinder.render("article-view", "content");
+        const newArticleButton = document.getElementById("new-article");
+        const allArticlesButton = document.getElementById("all-articles");
+        const settingsButton = document.getElementById("settings");
 
-    const newArticleButton = document.getElementById("new-article");
-    const allArticlesButton = document.getElementById("all-articles");
-    const settingsButton = document.getElementById("settings");
-
-    newArticleButton.onclick = () => dataBinder.render("article-editor", "content");
-    allArticlesButton.onclick = () => dataBinder.render("article-view", "content");
-    settingsButton.onclick = () => dataBinder.render("settings-editor", "content");
-
+        newArticleButton.onclick = () => dataBinder.render("article-editor", "content");
+        allArticlesButton.onclick = () => dataBinder.render("article-view", "content");
+        settingsButton.onclick = () => dataBinder.render("settings-editor", "content");
+    };
+    
     const views = ["article-editor.html", "settings-editor.html", "article-view.html", "login-view.html"];
     dataBinder.get(...views).then(() => {
         request("GET", "/admin/verify").then(() => {
-            dataBinder.render("article-view", "content");
+            loggedIn();
         }).catch(() => {
-            dataBinder.render("login-view", "content");
+            dataBinder.render("login-view", "content", { loggedIn });
         });
     });
 </script>

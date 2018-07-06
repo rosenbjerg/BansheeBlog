@@ -138,6 +138,34 @@
         }
     }
 
+    const targets = Object.create(null);
+
+    const children = {
+        name: "children",
+        init: htmlElement => {
+            return {
+                set: children => {
+                    while (htmlElement.lastChild) {
+                        htmlElement.removeChild(htmlElement.lastChild);
+                    }
+                    for (const child of children) {
+                        htmlElement.appendChild(child);
+                    }
+                }
+            };
+        }
+    };
+
+    function assign(customTarget) {
+        targets[customTarget.name] = htmlElement => {
+            Object.defineProperty(htmlElement, customTarget.name, customTarget.init(htmlElement));
+        };
+    }
+
+    assign(children);
+
+    targets[0] = assign;
+
     const BINDING_MODES = {
         OneWay: "->",
         TwoWay: "<->",
@@ -145,9 +173,11 @@
         Default: "-"
     };
     const DEFAULT_TARGET = {
-        Input: "value",
-        Checkbox: "checked",
-        Div: "innerText"
+        input: "value",
+        checkbox: "checked",
+        div: "innerText",
+        ul: "children"
+
     };
     const ATTRIBUTE = "data-bindings";
     const REGEX = /([\w-]+) *((<?->?) *(\w+)?( *\((\w+)\))?)?/;
@@ -169,23 +199,26 @@
             }
         }
     }
+
     function handleRemovedNodes(bindingContext, nodes) {
         for (const node of nodes) {
             const bindings = bindingContext._map.get(node);
             if (!bindings) {
                 continue;
             }
-            for (const binding of bindings) {
-                removeBinding(bindingContext, binding);
+            for (const bindingName in bindings) {
+                removeBinding(bindingContext, bindings[bindingName]);
             }
             bindingContext._map.delete(node);
         }
     }
+
     function handleAddedNodes(bindingContext, nodes) {
         for (const node of nodes) {
             indexElement(bindingContext, node);
         }
     }
+
     function handleAttributeChanged(bindingContext, event) {
         const sender = event.target;
         if (!bindingContext._map.has(sender)) {
@@ -201,6 +234,7 @@
             setTimeout(() => propertyChanged(bindingContext, sender, binding.source, value), 0);
         }, 'r');
     }
+
     function handleCharacterData(bindingContext, event) {
         if (event.target.nodeName === "#text") {
             const sender = event.target.parentNode;
@@ -227,19 +261,28 @@
             scheduleDomAction(() => htmlElement.removeAttribute(ATTRIBUTE), 'w');
         }
     }
+
     function bindElement(bindingContext, htmlElement, bindingMatch, nodeName) {
-        const binding = parseBinding(htmlElement, bindingMatch, nodeName);
-        if (bindingContext._bindings[binding.source] === undefined) {
+        const binding = extractBinding(htmlElement, bindingMatch, nodeName);
+        if (!Object.prototype.hasOwnProperty.call(bindingContext._bindings, binding.source)) {
             bindingContext._bindings[binding.source] = [];
         }
 
-        if (bindingContext._values[binding.source] === undefined) {
-            scheduleDomAction(() => bindingContext._values[binding.source] = htmlElement[binding.target], 'r');
+        if (targets[binding.target]) {
+            targets[binding.target](htmlElement);
+        }
+
+        if (!Object.prototype.hasOwnProperty.call(bindingContext._values, binding.source)) {
+            if (binding.mode === BINDING_MODES.OneWay) {
+                bindingContext._values[binding.source] = undefined;
+            } else {
+                scheduleDomAction(() => bindingContext._values[binding.source] = htmlElement[binding.target], 'r');
+            }
         } else if (binding.mode !== BINDING_MODES.OneWayToSource) {
             scheduleDomAction(() => htmlElement[binding.target] = bindingContext._values[binding.source], 'w');
         }
 
-        if (bindingContext[binding.source] === undefined) {
+        if (!Object.prototype.hasOwnProperty.call(bindingContext, binding.source)) {
             Object.defineProperty(bindingContext, binding.source, {
                 get: () => bindingContext._values[binding.source],
                 set: value => propertyChanged(bindingContext, null, binding.source, value)
@@ -251,7 +294,8 @@
         bindingContext._bindings[binding.source].push(binding);
         addToMap(bindingContext, htmlElement, binding);
     }
-    function parseBinding(htmlElement, bindingMatch, nodeName) {
+
+    function extractBinding(htmlElement, bindingMatch, nodeName) {
         const binding = {
             element: htmlElement,
             source: bindingMatch[1],
@@ -264,6 +308,7 @@
         }
         return binding;
     }
+
     function addToMap(bindingContext, htmlElement, binding) {
         let bindings = bindingContext._map.get(htmlElement);
         if (bindings === undefined) {
@@ -276,6 +321,7 @@
         }
         bindings[binding.target] = binding;
     }
+
     function removeBinding(bindingContext, binding) {
         const bindings = bindingContext._bindings[binding.source];
         const index = bindings.indexOf(binding);
@@ -319,13 +365,15 @@
                 return BINDING_MODES.OneWay;
         }
     }
+
     function getDefaultEvent(htmlElement, nodeName, target) {
+
         if (nodeName === "input") {
-            if (target === DEFAULT_TARGET.Input) {
+            if (target === DEFAULT_TARGET.input) {
                 return "input";
             }
 
-            if (target === DEFAULT_TARGET.Checkbox) {
+            if (target === DEFAULT_TARGET.checkbox) {
                 const type = htmlElement.type.toLowerCase();
                 if (type === "checkbox" || type === "radiobutton") {
                     return "change";
@@ -339,6 +387,7 @@
         }
         return false;
     }
+
     function getDefaultTarget(htmlElement, nodeName) {
         switch (nodeName) {
             case "input":
@@ -352,6 +401,8 @@
                 return "value";
             case "form":
                 return "onsubmit";
+            case "ul":
+                return "children";
             default:
                 return "innerText";
         }
@@ -366,6 +417,7 @@
             }, 'r');
         });
     }
+
     function getBindingsFromAttribute(htmlElement) {
         let attr;
         if (htmlElement.getAttribute === undefined || !(attr = htmlElement.getAttribute(ATTRIBUTE))) {
@@ -433,14 +485,18 @@
             scheduleDomAction(() => {
                 domElement.innerHTML = html;
                 setTimeout(() => {
-                    domElement.bindingContext = bindingContext;
-                    const props = Object.getOwnPropertyNames(bindingContext);
-                    if (bindingContext.onPropertyChanged === undefined) {
-                        initBindingContext(bindingContext);
+                    try {
+                        domElement.bindingContext = bindingContext;
+                        const props = Object.getOwnPropertyNames(bindingContext);
+                        if (bindingContext.onPropertyChanged === undefined) {
+                            initBindingContext(bindingContext);
+                        }
+                        indexBindingContext(bindingContext, props);
+                        indexDomElement(bindingContext, domElement);
+                        accept();
+                    } catch (e) {
+                        reject(e);
                     }
-                    indexBindingContext(bindingContext, props);
-                    indexDomElement(bindingContext, domElement);
-                    accept();
                 }, 0);
             }, 'w');
         });

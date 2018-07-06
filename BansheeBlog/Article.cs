@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 using SQLite;
 
 namespace BansheeBlog
 {
     class Article
     {
-        [PrimaryKey] public Guid Id { get; set; } = Guid.Empty;
+        [PrimaryKey] 
+        public Guid Id { get; set; } = Guid.Empty;
         
         [Indexed]
+        [JsonProperty(Required = Required.Always)]
         public string Slug { get; set; }
+        
+        [JsonProperty(Required = Required.Always)]
         public string Title { get; set; }
         public string Tags { get; set; }
         
@@ -31,13 +36,21 @@ namespace BansheeBlog
 
     class ArticleHtml
     {
-        [PrimaryKey] public Guid Id { get; set; } = Guid.NewGuid();
+        [PrimaryKey] 
+        [JsonProperty(Required = Required.Always)]
+        public Guid Id { get; set; } = Guid.NewGuid();
+        
+        [JsonProperty(Required = Required.Always)]
         public string Content { get; set; }
     }
     
     class ArticleMarkdown
     {
-        [PrimaryKey] public Guid Id { get; set; } = Guid.NewGuid();
+        [PrimaryKey]
+        [JsonProperty(Required = Required.Always)]
+        public Guid Id { get; set; } = Guid.NewGuid();
+        
+        [JsonProperty(Required = Required.Always)]
         public string Content { get; set; }
     }
 }

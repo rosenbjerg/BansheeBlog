@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace BansheeBlog
@@ -21,6 +22,19 @@ namespace BansheeBlog
                 .ToLowerInvariant()
                 .Trim();
             return WebUtility.UrlEncode(urlTitle);
+        }
+        public static void CopyMeta(Article existing, Article updated)
+        {
+            existing.Edited = DateTime.UtcNow;
+            existing.Title = updated.Title;
+            existing.Slug = updated.Slug;
+            existing.Tags = updated.Tags;
+            if (existing.Public != updated.Public)
+            {
+                existing.Published = updated.Public ? DateTime.UtcNow : existing.Published;
+            }
+
+            existing.Public = updated.Public;
         }
     }
 }

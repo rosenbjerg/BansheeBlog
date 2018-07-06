@@ -31,9 +31,6 @@
 <script type="text/javascript" data-behaviour for="login-view">
     function onBind() {
         return {
-            afterBind: () => {
-                
-            },
             properties: {
                 username: "",
                 password: "",
@@ -44,7 +41,7 @@
                         Password: this.password
                     };
                     request("POST", "/login", credentials).then(() => {
-                        dataBinder.render("article-view", "content");
+                        this.loggedIn();
                     });
                 }
                 

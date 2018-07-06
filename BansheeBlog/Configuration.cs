@@ -10,11 +10,18 @@ namespace BansheeBlog
         public int Port { get; set; }
         public string PublicDirectory { get; set; }
         public string ThemeDirectory { get; set; } 
+        public string TempDirectory { get; set; } 
 
         public static Configuration Load(string filepath)
         {
             var json = File.ReadAllText(filepath);
-            return JsonConvert.DeserializeObject<Configuration>(json);
+            var config = JsonConvert.DeserializeObject<Configuration>(json);
+            
+            config.DatabaseFilePath = Path.GetFullPath(config.DatabaseFilePath);
+            config.ThemeDirectory = Path.GetFullPath(config.ThemeDirectory);
+            config.PublicDirectory = Path.GetFullPath(config.PublicDirectory);
+            
+            return config;
         }
     }
 }

@@ -1,10 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using HandlebarsDotNet;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.ObjectPool;
 using Newtonsoft.Json;
 using Red;
 using Red.CookieSessions;
@@ -16,6 +19,7 @@ namespace BansheeBlog
 {
     class User
     {
+        [PrimaryKey] 
         public string Username { get; set; }
         public string Password { get; set; }
     }
@@ -33,18 +37,18 @@ namespace BansheeBlog
                     Password = BCrypt.Net.BCrypt.HashPassword(password, 12)
                 };
                 await db.InsertAsync(admin);
-                
+
                 var print = $"username: {admin.Username}\npassword: {password}";
                 await File.WriteAllTextAsync("./credentials.txt", print);
                 Console.WriteLine("Credentials saved in '.credentials.txt'");
             }
         }
-        
-        static void Main(string[] args)
+
+        static async Task Main(string[] args)
         {
             const string configPath = "config.json";
             const string settingsPath = "settings.json";
-
+            
             var config = Configuration.Load(configPath);
             var settings = Settings.Load(settingsPath);
 
@@ -52,17 +56,19 @@ namespace BansheeBlog
 
             var sessionSettings = new CookieSessionSettings(TimeSpan.FromDays(2))
             {
-                Secure = false,
-                ShouldAuthenticate = path => path.StartsWith("/admin/")
+                Secure = false
             };
             server.Use(new CookieSessions<User>(sessionSettings));
 
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
 
-            Task.WaitAll(db.CreateTableAsync<User>(),
+            await Task.WhenAll(db.CreateTableAsync<User>(),
                 db.CreateTableAsync<Article>(),
                 db.CreateTableAsync<ArticleHtml>(),
                 db.CreateTableAsync<ArticleMarkdown>());
+
+            Directory.CreateDirectory(Path.Combine(config.PublicDirectory, "files"));
+            Directory.CreateDirectory(config.TempDirectory);
 
             var partials = new[] {"header", "footer", "navigation", "meta", "style"};
             foreach (var partial in partials)
@@ -101,7 +107,7 @@ namespace BansheeBlog
             server.Get("/:slug", async (req, res) =>
             {
                 var slug = req.Parameters["slug"];
-                var article = await db.FindAsync<Article>(arti => arti.Slug == slug);
+                var article = await db.FindAsync<Article>(arti => arti.Public && arti.Slug == slug);
                 if (article == null)
                 {
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "error.hbs");
@@ -149,33 +155,34 @@ namespace BansheeBlog
                 var articles = await db.Table<Article>().ToListAsync();
                 await res.SendJson(articles);
             });
-
             server.Get("/admin/article/:id", async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
                 var article = await db.FindAsync<Article>(arti => arti.Id == articleId);
-                await res.SendJson(article);
+                if (article != null)
+                {
+                    await res.SendJson(article);
+                }
+                else
+                {
+                    await res.SendStatus(HttpStatusCode.NotFound);
+                }
             });
-
             server.Get("/admin/article/:id/markdown", async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
                 var articleMarkup = await db.FindAsync<ArticleMarkdown>(arti => arti.Id == articleId);
-                await res.SendJson(articleMarkup);
+                if (articleMarkup != null)
+                {
+                    await res.SendJson(articleMarkup);
+                }
+                else
+                {
+                    await res.SendStatus(HttpStatusCode.NotFound);
+                }
             });
 
-            void CopyMeta(Article existing, Article updated)
-            {
-                existing.Edited = DateTime.UtcNow;
-                existing.Title = updated.Title;
-                existing.Slug = updated.Slug;
-                existing.Tags = updated.Tags;
-                if (existing.Public != updated.Public)
-                {
-                    existing.Published = updated.Public ? DateTime.UtcNow : existing.Published;
-                }
-                existing.Public = updated.Public;
-            }
+           
 
             server.Put("/admin/article/meta", async (req, res) =>
             {
@@ -197,7 +204,7 @@ namespace BansheeBlog
                     return;
                 }
 
-                CopyMeta(existingArticle, updatedArticle);
+                Utils.CopyMeta(existingArticle, updatedArticle);
 
                 await db.UpdateAsync(existingArticle);
                 await res.SendStatus(HttpStatusCode.OK);
@@ -240,7 +247,7 @@ namespace BansheeBlog
                     articleMarkdown = new ArticleMarkdown {Id = article.Id};
                 }
 
-                CopyMeta(article, updatedArticle);
+                Utils.CopyMeta(article, updatedArticle);
 
                 articleMarkdown.Content = updatedArticle.Markdown;
                 articleHtml.Content = CommonMark.CommonMarkConverter.Convert(updatedArticle.Markdown);
@@ -271,12 +278,57 @@ namespace BansheeBlog
                 await Task.WhenAll(db.DeleteAsync(articleHtml), db.DeleteAsync(articleMarkdown));
                 await res.SendStatus(deleted > 1 ? HttpStatusCode.OK : HttpStatusCode.NotFound);
             });
+
             server.Get("/admin/settings", async (req, res) => { await res.SendJson(settings); });
             server.Post("/admin/settings", async (req, res) =>
             {
-                settings = await req.ParseBodyAsync<Settings>();
+                var newSettings = await req.ParseBodyAsync<Settings>();
+                if (newSettings == null)
+                {
+                    await res.SendStatus(HttpStatusCode.BadRequest);
+                    return;
+                }
+
+                settings = newSettings;
                 File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings));
                 await res.SendStatus(HttpStatusCode.OK);
+            });
+            
+            server.Post("/admin/changepassword", async (req, res) =>
+            {
+                var sessionUser = req.GetSession<User>().Data;
+
+                var form = await req.GetFormDataAsync();
+
+                if (form == null || form["newPassword1"] != form["newPassword2"] ||
+                    !BCrypt.Net.BCrypt.Verify(form["oldPassword"], sessionUser.Password))
+                {
+                    await res.SendStatus(HttpStatusCode.BadRequest);
+                }
+                else
+                {
+                    sessionUser.Password = BCrypt.Net.BCrypt.HashPassword(form["newPassword1"], 11);
+                    await db.UpdateAsync(sessionUser);
+                    await res.SendStatus(HttpStatusCode.OK);
+                }
+            });
+
+            server.Get("/admin/files", async (req, res) =>
+            {
+                var staticFileFolder = Path.Combine(config.PublicDirectory, "files");
+                var staticFileFolderUri = new Uri(staticFileFolder);
+
+                var files = Directory.EnumerateFiles(staticFileFolder, "*", SearchOption.AllDirectories);
+                var relativePaths =
+                    files.Select(file => staticFileFolderUri.MakeRelativeUri(new Uri(file)).OriginalString).ToList();
+
+                await res.SendJson(relativePaths);
+            });
+            server.Post("/admin/files", async (req, res) =>
+            {
+                var saved = await req.SaveFiles(Path.Combine(config.PublicDirectory, "files"), maxSizeKb: 1024000);
+                var status = saved ? HttpStatusCode.OK : HttpStatusCode.BadRequest;
+                await res.SendStatus(status);
             });
 
             server.Get("/admin/themes", async (req, res) =>
@@ -285,6 +337,30 @@ namespace BansheeBlog
                     .Select(Path.GetFileName);
                 await res.SendJson(themeDirs);
             });
+            server.Post("/admin/theme", async (req, res) =>
+            {
+                try
+                {
+                    var form = await req.GetFormDataAsync();
+                    var file = form.Files.FirstOrDefault();
+
+                    var tempPath = Path.Combine(config.TempDirectory, file.FileName);
+                    using (var tempFile = File.Create(tempPath))
+                    {
+                        await file.CopyToAsync(tempFile);
+                    }
+                
+                    await Task.Run(() => ZipFile.ExtractToDirectory(tempPath, "themes"));
+                    File.Delete(tempPath);
+                    await res.SendStatus(HttpStatusCode.OK);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            });
+
 
             server.Start();
             Console.ReadLine();
