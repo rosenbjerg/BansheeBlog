@@ -8,10 +8,10 @@
     <PackageReference Include="BCrypt-Official" Version="0.1.109" />
     <PackageReference Include="CommonMark.NET" Version="0.15.1" />
     <PackageReference Include="Handlebars.Net" Version="1.9.5" />
-    <PackageReference Include="Red.CookieSessions" Version="2.0.0" />
+    <PackageReference Include="Red.CookieSessions" Version="2.1.1" />
     <PackageReference Include="Red.HandlebarsRenderer" Version="1.0.0" />
-    <PackageReference Include="RHttpServer" Version="3.2.1" />
-    <PackageReference Include="sqlite-net-pcl" Version="1.4.118" />
+    <PackageReference Include="RHttpServer" Version="3.5.2" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.5.231" />
     <PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>

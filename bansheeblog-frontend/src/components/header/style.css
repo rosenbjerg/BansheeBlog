@@ -1,0 +1,12 @@
+
+.title {
+    font-family: 'Lobster', cursive;
+    font-size: 2rem;
+    margin-left: 4px;
+}
+
+
+
+.toolbar {
+    box-shadow: 0 0 0.2em rgba(17, 17, 17, 0.2);
+}
