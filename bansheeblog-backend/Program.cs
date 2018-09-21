@@ -112,11 +112,17 @@ namespace BansheeBlog
             // Routes
             server.Get("/", async (req, res) =>
             {
+                var query = req.Queries["p"];
+                if (string.IsNullOrWhiteSpace(query))
+                    query = "1";
+                var page = Math.Min(int.Parse(query), 1);
+                
                 var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
 
                 var articles = await db.Table<Article>()
                     .Where(article => article.Public)
                     .OrderByDescending(article => article.Created)
+                    .Skip((page - 1) * 5)
                     .Take(5)
                     .ToListAsync();
 
