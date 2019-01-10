@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HandlebarsDotNet;
 using Microsoft.AspNetCore.Http;
@@ -61,7 +62,7 @@ namespace BansheeBlog
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
             
             // Cookie session authentication
-            server.Use(new CookieSessions(new CookieSessionSettings(TimeSpan.FromDays(2))
+            server.Use(new CookieSessions<Session>(new CookieSessionSettings(TimeSpan.FromDays(2))
             {
                 Secure = false
             }));
@@ -137,7 +138,7 @@ namespace BansheeBlog
             server.Get("/:slug", async (req, res) =>
             {
                 var slug = req.Parameters["slug"];
-                var article = await db.FindAsync<Article>(arti => arti.Public && arti.Slug == slug);
+                var article = await db.FindAsync<Article>(a => a.Public && a.Slug == slug);
                 if (article == null)
                 {
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "error.hbs");
@@ -151,7 +152,7 @@ namespace BansheeBlog
                 }
                 else
                 {
-                    var htmlContent = await db.FindAsync<ArticleHtml>(arti => arti.Id == article.Id);
+                    var htmlContent = await db.FindAsync<ArticleHtml>(a => a.Id == article.Id);
                     article.Html = htmlContent.Content;
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "article.hbs");
                     await res.RenderTemplate(templatePath, new
@@ -163,29 +164,40 @@ namespace BansheeBlog
                 }
             });
 
-            server.Post("/login", async (req, res) =>
+            server.Get("/api/verify", Auth, async (req, res) => await res.SendStatus(HttpStatusCode.OK));
+            server.Post("/api/login", async (req, res) =>
             {
-                var credentials = await req.ParseBodyAsync<User>();
-                var user = await db.FindAsync<User>(u => u.Username == credentials.Username);
+                var form = await req.GetFormDataAsync();
+                string username = form["username"];
+                string password = form["password"];
+                
+                var user = await db.FindAsync<User>(u => u.Username == username);
 
-                if (user == null || !BCrypt.Net.BCrypt.Verify(credentials.Password, user.Password))
+                if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
                 {
                     await res.SendStatus(HttpStatusCode.BadRequest);
                     return;
                 }
 
-                req.OpenSession(user);
+                await req.OpenSession(new Session
+                {
+                    Username = user.Username
+                });
+                await res.SendStatus(HttpStatusCode.OK);
+            });
+            server.Post("/api/logout", Auth, async (req, res) =>
+            {
+                await req.GetSession<Session>().Close(req);
                 await res.SendStatus(HttpStatusCode.OK);
             });
 
-            server.Get("/api/verify", Auth, async (req, res) => await res.SendStatus(HttpStatusCode.OK));
 
             server.Get("/api/articles", Auth, async (req, res) =>
             {
                 var articles = await db.Table<Article>().ToListAsync();
                 await res.SendJson(articles);
             });
-            server.Get("/api/article/:id", async (req, res) =>
+            server.Get("/api/article/:id", Auth, async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
                 var article = await db.FindAsync<Article>(arti => arti.Id == articleId);
@@ -389,7 +401,6 @@ namespace BansheeBlog
                     throw;
                 }
             });
-
 
             await server.RunAsync();
         }

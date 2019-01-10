@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using Newtonsoft.Json;
 
@@ -14,6 +16,9 @@ namespace BansheeBlog
 
         public static Configuration Load(string filepath)
         {
+            var numbers = Enumerable.Range(0, 100).Where(x => x % 2 == 0);
+            
+            
             var json = File.ReadAllText(filepath);
             var config = JsonConvert.DeserializeObject<Configuration>(json);
             

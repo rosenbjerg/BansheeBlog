@@ -1,5 +1,5 @@
 :root {
-    --mdc-theme-primary: #FFFFFF;
+    --mdc-theme-primary: #212121;
     --font-color: #212121;
     --mdc-theme-background: #F5F5F5;
 }
@@ -58,8 +58,8 @@ html, body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-	box-sizing: border-box;
+*:not(.mdc-text-field__input) {
+    box-sizing: border-box;
 }
 
 
