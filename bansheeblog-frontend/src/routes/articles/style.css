@@ -1,13 +1,10 @@
 .home {
-	padding: 20px;
+	padding: 74px 20px 20px;
 	min-height: 100%;
 	width: 100%;
 }
 
-.cardHeader {
-  padding: 16px;
-}
-
-.cardBody {
-  padding: 16px;
+.card {
+	padding: 12px;
+	margin-bottom: 8px;
 }

@@ -26,9 +26,7 @@ namespace BansheeBlog
         [Indexed]
         public bool Public { get; set; }
         
-        public string Creator { get; set; }
-        public string Editor { get; set; }
-        public string Publisher { get; set; }
+        public string Author { get; set; }
         
         public string Html { get; set; }
         public string Markdown { get; set; }

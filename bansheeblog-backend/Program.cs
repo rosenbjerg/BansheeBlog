@@ -24,11 +24,15 @@ namespace BansheeBlog
         [PrimaryKey] 
         public string Username { get; set; }
         public string Password { get; set; }
+
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
     }
 
     class Session
     {
         public string Username { get; set; }
+        public string Name { get; set; }
     }
     
     class Program
@@ -62,7 +66,7 @@ namespace BansheeBlog
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
             
             // Cookie session authentication
-            server.Use(new CookieSessions<Session>(new CookieSessionSettings(TimeSpan.FromDays(2))
+            server.Use(new CookieSessions<Session>(new CookieSessionSettings(TimeSpan.FromDays(14))
             {
                 Secure = false
             }));
@@ -181,7 +185,8 @@ namespace BansheeBlog
 
                 await req.OpenSession(new Session
                 {
-                    Username = user.Username
+                    Username = user.Username,
+                    Name = user.Name
                 });
                 await res.SendStatus(HttpStatusCode.OK);
             });
@@ -253,6 +258,7 @@ namespace BansheeBlog
 
             server.Put("/api/article", Auth, async (req, res) =>
             {
+                var sessionData = req.GetSession<Session>().Data;
                 var updatedArticle = await req.ParseBodyAsync<Article>();
 
                 if (await db.FindAsync<Article>(arti =>
@@ -283,7 +289,7 @@ namespace BansheeBlog
                 }
                 else
                 {
-                    article = new Article {Id = Guid.NewGuid(), Created = DateTime.UtcNow};
+                    article = new Article {Id = Guid.NewGuid(), Created = DateTime.UtcNow, Author = sessionData.Name};
                     articleHtml = new ArticleHtml {Id = article.Id};
                     articleMarkdown = new ArticleMarkdown {Id = article.Id};
                 }
@@ -317,7 +323,7 @@ namespace BansheeBlog
 
                 var deleted = await db.DeleteAsync(article);
                 await Task.WhenAll(db.DeleteAsync(articleHtml), db.DeleteAsync(articleMarkdown));
-                await res.SendStatus(deleted > 1 ? HttpStatusCode.OK : HttpStatusCode.NotFound);
+                await res.SendStatus(deleted == 1 ? HttpStatusCode.OK : HttpStatusCode.NotFound);
             });
 
             server.Get("/api/settings", Auth, async (req, res) => { await res.SendJson(settings); });
@@ -374,8 +380,7 @@ namespace BansheeBlog
 
             server.Get("/api/themes", Auth, async (req, res) =>
             {
-                var themeDirs = Directory.EnumerateDirectories(config.ThemeDirectory)
-                    .Select(Path.GetFileName);
+                var themeDirs = Directory.EnumerateDirectories(config.ThemeDirectory).Select(Path.GetFileName);
                 await res.SendJson(themeDirs);
             });
             server.Post("/api/theme", Auth, async (req, res) =>
@@ -392,8 +397,9 @@ namespace BansheeBlog
                     }
                 
                     await Task.Run(() => ZipFile.ExtractToDirectory(tempPath, "themes"));
+                    var themeDirs = Directory.EnumerateDirectories(config.ThemeDirectory).Select(Path.GetFileName);
                     File.Delete(tempPath);
-                    await res.SendStatus(HttpStatusCode.OK);
+                    await res.SendJson(themeDirs);
                 }
                 catch (Exception e)
                 {

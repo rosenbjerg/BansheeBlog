@@ -4,13 +4,16 @@ import linkState from 'linkstate';
 import Card from 'preact-material-components/Card';
 import 'preact-material-components/Card/style.css';
 import 'preact-material-components/Button/style.css';
+import 'preact-material-components/FormField/style.css';
 import Typography from 'preact-material-components/Typography';
+import FormField from 'preact-material-components/FormField';
 import 'preact-material-components/Typography/style.css';
 import { Get, Post } from '../../Fetcher';
 import { route } from 'preact-router';
 import TextField from 'preact-material-components/TextField';
 import 'preact-material-components/TextField/style.css';
 
+import style from './style.css';
 
 const cardStyle = {
 	margin: 10
@@ -27,24 +30,28 @@ export default class Articles extends Component {
 
     login = async ev => {
     	ev.preventDefault();
-    	console.log(ev.target);
     	const formdata = new FormData(ev.target);
     	const response = await Post('/api/login', formdata, false);
-        ev.target.reset();
+    	ev.target.reset();
     	if (response.ok) {
-    		route('/');
+    		console.log('logged in');
+    		route('/admin/');
     	}
     };
 
 
     render() {
     	return (
-    		<div style={cardStyle}>
+    		<div className={style.home}>
     			<Card style={loginStyle}>
     				<Typography headline4>Admin login</Typography>
     				<form onSubmit={this.login}>
-    					<TextField label="Username" name="username" required />
-    					<TextField label="Password" name="password" type="password" required />
+    					<div>
+    						<TextField className="fullwidth" label="Username" name="username" required />
+    					</div>
+    					<div>
+    						<TextField className="fullwidth" label="Password" name="password" type="password" required />
+    					</div>
     					<Card.Actions>
     						<Card.ActionButton type="submit">Login</Card.ActionButton>
     					</Card.Actions>

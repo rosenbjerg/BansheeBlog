@@ -1,0 +1,10 @@
+.home {
+	padding: 74px 20px 20px;
+	min-height: 100%;
+	width: 100%;
+}
+
+.card {
+	padding: 12px;
+	margin-bottom: 8px;
+}

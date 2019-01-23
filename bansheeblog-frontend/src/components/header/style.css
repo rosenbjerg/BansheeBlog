@@ -2,7 +2,9 @@
 .title {
     font-family: 'Lobster', cursive;
     font-size: 2rem;
-    margin-left: 4px;
+    line-height: 2.5rem;
+    user-select: none;
+    padding-left: 0;
 }
 
 

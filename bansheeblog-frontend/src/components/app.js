@@ -8,8 +8,10 @@ import 'preact-material-components/Snackbar/style.css';
 
 import Header from './header';
 import Articles from '../routes/articles';
+import Editor from '../routes/editor';
 import Login from '../routes/login';
 import Profile from '../routes/profile';
+import Settings from '../routes/settings';
 import NotFound from '../routes/404';
 import { Get } from '../Fetcher';
 // import Articles from 'async!../routes/home';
@@ -20,7 +22,7 @@ export default class App extends Component {
 	constructor(props) {
 		super(props);
 
-		Globals.showSnackbar = text => setTimeout(() => {
+		Globals.showSnackbar = text =>  {
 			this.snackbar.MDComponent.show({
 				message: text,
 				actionText: '✖',
@@ -29,7 +31,7 @@ export default class App extends Component {
 				actionOnBottom: false,
 				actionHandler: () => true
 			});
-		}, 0);
+		};
 	}
 
 	bindSnackbar = ref => this.snackbar = ref;
@@ -37,25 +39,26 @@ export default class App extends Component {
     load = async () => {
     	const response = await Get('/api/verify');
     	if (!response.ok) {
-    		route('/login');
+    		route('/admin/login');
     	}
     };
 
-	componentDidMount() {
-		this.load();
-	}
+    componentDidMount() {
+    	this.load();
+    }
 
     render() {
     	return (
     		<div id="app">
     			<Header />
     			<Router>
-    				<Login path="/login" />
+    				<Login path="/admin/login" />
 
-    				<Articles path="/" />
+    				<Articles path="/admin/" />
+    				<Editor path="/admin/editor/:articleId?" />
+    				<Settings path="/admin/settings" />
+    				<Profile path="/admin/profile" />
 
-    				<Profile path="/profile/" user="me" />
-    				<Profile path="/profile/:user" />
     				<NotFound default />
     			</Router>
 
