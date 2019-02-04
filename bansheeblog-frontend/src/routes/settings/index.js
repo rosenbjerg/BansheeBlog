@@ -71,7 +71,7 @@ export default class Settings extends Component {
 	}
 
 	themeChanged = ev => {
-		const selected = this.state.themes[ev.target.selectedIndex - 1]; 
+		const selected = this.state.themes[ev.target.selectedIndex - 1];
 		this.setState(s => s.settings.ActiveTheme = selected);
 	};
 	openManageThemeDialog = () => this.uploadThemeDialog.MDComponent.show();
