@@ -57,7 +57,6 @@ export default class App extends Component {
     				<Articles path="/admin/" />
     				<Editor path="/admin/editor/:articleId?" />
     				<Settings path="/admin/settings" />
-    				<Profile path="/admin/profile" />
 
     				<NotFound default />
     			</Router>

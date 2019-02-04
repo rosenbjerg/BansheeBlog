@@ -30,7 +30,9 @@ export default class Settings extends Component {
 
 	state = {
 		settings: {},
-		themes: []
+		themes: [],
+		currentPassword: '',
+		newPassword1: ''
 	};
 
 	articleToDelete = undefined;
@@ -64,7 +66,14 @@ export default class Settings extends Component {
 		this.load();
 	}
 
-	themeChanged = ev => this.setState(s => s.settings.ActiveTheme = s.themes[ev.target.selectedIndex]);
+	async componentWillUnmount() {
+		await this.save();
+	}
+
+	themeChanged = ev => {
+		const selected = this.state.themes[ev.target.selectedIndex - 1]; 
+		this.setState(s => s.settings.ActiveTheme = selected);
+	};
 	openManageThemeDialog = () => this.uploadThemeDialog.MDComponent.show();
 
 	render(props, state) {
@@ -73,22 +82,37 @@ export default class Settings extends Component {
 				<Card class={style.card}>
 					<Typography headline4>Settings</Typography>
 
+					<Typography headline6>Blog info</Typography>
 					<TextField className="fullwidth" label="Author" value={state.settings.Author} onChange={linkState(this, 'settings.Author')} />
 					<TextField className="fullwidth" label="Blog title" value={state.settings.BlogTitle} onChange={linkState(this, 'settings.BlogTitle')} />
 					<TextField className="fullwidth" label="Blog description" value={state.settings.BlogDescription} onChange={linkState(this, 'settings.BlogDescription')} />
+
+					<Typography headline6>Analytics</Typography>
 					<TextField className="fullwidth" label="Google Analytics Tracking ID" value={state.settings.GoogleAnalyticsTrackingId} onChange={linkState(this, 'settings.GoogleAnalyticsTrackingId')} />
 					<div style={{ margin: '8px 0 8px 4px' }}>
 						<Typography style={{ 'margin-right': '10px' }} body1>Use server-side tracking to monitor visits</Typography>
 						<Switch checked={state.settings.UseServerSideTracking} onChange={linkState(this, 'settings.UseServerSideTracking')} />
 					</div>
+
+					<Typography headline6>Themes</Typography>
 					<Select hintText="Blog theme"
-						selectedIndex={state.themes.indexOf(state.settings.ActiveTheme)}
-						onChange={this.themeChanged}
+						selectedIndex={state.themes.indexOf(state.settings.ActiveTheme) + 1}
+						onInput={this.themeChanged}
 					>
 						{state.themes.map(theme => <Select.Item>{theme}</Select.Item>)}
 					</Select>
-					<Button onClick={this.save}>Save blog settings</Button>
+
 					<Button onClick={this.openManageThemeDialog}>Manage blog themes</Button>
+					{/*<Button onClick={this.save}>Save blog settings</Button>*/}
+
+
+					<Typography headline6>Change your admin password</Typography>
+					<form>
+						<TextField value={state.currentPassword} onChange={linkState(this, 'currentPassword')} class="fullwidth" label="Current password" />
+						<TextField value={state.newPassword1} onChange={linkState(this, 'newPassword1')} class="fullwidth" label="New password" />
+						<TextField value={state.newPassword2} onChange={linkState(this, 'newPassword2')} class="fullwidth" label="Repeat new password" />
+						<Button class="fullwidth">Change password</Button>
+					</form>
 
 				</Card>
 
@@ -100,7 +124,7 @@ export default class Settings extends Component {
 							{state.themes.map(theme => (
 								<li key={theme}>
 									<Typography headline6>{theme}</Typography>
-									<Icon>delete_permanently</Icon>
+									{theme !== 'default' && <Icon>delete_permanently</Icon>}
 								</li>
 							))}
 						</ul>
@@ -109,7 +133,7 @@ export default class Settings extends Component {
 						<Typography>Upload more themes</Typography>
 						<form ref={this.bindUploadThemeForm}>
 							<div>
-								<input type="file" />
+								<input type="file" accept=".zip" />
 							</div>
 							<Button type="submit">Upload</Button>
 						</form>

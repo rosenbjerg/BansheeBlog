@@ -9,7 +9,6 @@ export default class Header extends Component {
     openEditor = () => route('/admin/editor');
     openArticles = () => route('/admin/');
     openSettings = () => route('/admin/settings');
-    openProfile = () => route('/admin/profile');
 
     render() {
     	return (
@@ -20,7 +19,6 @@ export default class Header extends Component {
     						<TopAppBar.Title onClick={this.openArticles} class={style.title}>BansheeBlog</TopAppBar.Title>
     						<TopAppBar.Icon title="Write new article" onClick={this.openEditor}>edit</TopAppBar.Icon>
     						<TopAppBar.Icon title="All articles" onClick={this.openArticles}>view_list</TopAppBar.Icon>
-    						<TopAppBar.Icon title="Profile page" onClick={this.openProfile}>account_circle</TopAppBar.Icon>
     						<TopAppBar.Icon title="Change settings" onClick={this.openSettings}>settings</TopAppBar.Icon>
     					</TopAppBar.Section>
     					<TopAppBar.Section align-end shrink-to-fit>
