@@ -5,8 +5,11 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CommonMark;
 using HandlebarsDotNet;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ObjectPool;
@@ -19,22 +22,6 @@ using SQLite;
 
 namespace BansheeBlog
 {
-    class User
-    {
-        [PrimaryKey] 
-        public string Username { get; set; }
-        public string Password { get; set; }
-
-        public string Name { get; set; } = "";
-        public string Email { get; set; } = "";
-    }
-
-    class Session
-    {
-        public string Username { get; set; }
-        public string Name { get; set; }
-    }
-    
     class Program
     {
         private static async void CreateFirstUser(SQLiteAsyncConnection db)
@@ -58,12 +45,29 @@ namespace BansheeBlog
         const string ConfigPath = "config.json";
         const string SettingsPath = "settings.json";
         
+        private static async Task Auth(Request req, Response res)
+        {
+            if (req.GetSession<Session>() == null)
+            {
+                await res.SendStatus(HttpStatusCode.Unauthorized);
+            }
+        }
+        
         static async Task Main(string[] args)
         {
             var config = Configuration.Load(ConfigPath);
             var settings = Settings.Load(SettingsPath);
 
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
+            var tracking = new Tracking();
+
+            server.ConfigureApplication = app =>
+            {
+                app.UseForwardedHeaders(new ForwardedHeadersOptions
+                {
+                    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+                });
+            };
             
             // Cookie session authentication
             server.Use(new CookieSessions<Session>(new CookieSessionSettings(TimeSpan.FromDays(14))
@@ -73,11 +77,11 @@ namespace BansheeBlog
             
             // Setup database and tables
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
-
+            
             await Task.WhenAll(db.CreateTableAsync<User>(),
-                db.CreateTableAsync<Article>(),
-                db.CreateTableAsync<ArticleHtml>(),
-                db.CreateTableAsync<ArticleMarkdown>());
+                                           db.CreateTableAsync<Article>(),
+                                           db.CreateTableAsync<ArticleHtml>(),
+                                           db.CreateTableAsync<ArticleMarkdown>());
 
             // Check if first start and create admin user
             CreateFirstUser(db);
@@ -106,13 +110,6 @@ namespace BansheeBlog
                 });
             }
 
-            async Task Auth(Request req, Response res)
-            {
-                if (req.GetSession<Session>() == null)
-                {
-                    await res.SendStatus(HttpStatusCode.Unauthorized);
-                }
-            }
 
             // Routes
             server.Get("/", async (req, res) =>
@@ -120,7 +117,12 @@ namespace BansheeBlog
                 var query = req.Queries["p"];
                 if (string.IsNullOrWhiteSpace(query))
                     query = "1";
-                var page = Math.Min(int.Parse(query), 1);
+                var page = Math.Max(int.Parse(query), 1);
+                
+                if (settings.UseServerSideTracking)
+                {
+                    tracking.CollectInformation(req, "", db);
+                }
                 
                 var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
 
@@ -138,10 +140,15 @@ namespace BansheeBlog
                     Settings = settings
                 });
             });
+            server.Get("/favicon.ico", async (req, res) => await res.SendFile("public/favicon.ico"));
 
             server.Get("/:slug", async (req, res) =>
             {
                 var slug = req.Parameters["slug"];
+                if (settings.UseServerSideTracking)
+                {
+                    tracking.CollectInformation(req, slug, db);
+                }
                 var article = await db.FindAsync<Article>(a => a.Public && a.Slug == slug);
                 if (article == null)
                 {
@@ -156,7 +163,7 @@ namespace BansheeBlog
                 }
                 else
                 {
-                    var htmlContent = await db.FindAsync<ArticleHtml>(a => a.Id == article.Id);
+                    var htmlContent = await db.GetAsync<ArticleHtml>(article.Id);
                     article.Html = htmlContent.Content;
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "article.hbs");
                     await res.RenderTemplate(templatePath, new
@@ -167,6 +174,7 @@ namespace BansheeBlog
                     });
                 }
             });
+
 
             server.Get("/api/verify", Auth, async (req, res) => await res.SendStatus(HttpStatusCode.OK));
             server.Post("/api/login", async (req, res) =>
@@ -205,7 +213,7 @@ namespace BansheeBlog
             server.Get("/api/article/:id", Auth, async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
-                var article = await db.FindAsync<Article>(arti => arti.Id == articleId);
+                var article = await db.GetAsync<Article>(articleId);
                 if (article != null)
                 {
                     await res.SendJson(article);
@@ -218,7 +226,7 @@ namespace BansheeBlog
             server.Get("/api/article/:id/markdown", Auth, async (req, res) =>
             {
                 var articleId = Guid.Parse(req.Parameters["id"]);
-                var articleMarkup = await db.FindAsync<ArticleMarkdown>(arti => arti.Id == articleId);
+                var articleMarkup = await db.GetAsync<ArticleMarkdown>(articleId);
                 if (articleMarkup != null)
                 {
                     await res.SendJson(articleMarkup);
@@ -297,7 +305,7 @@ namespace BansheeBlog
                 Utils.CopyMeta(article, updatedArticle);
 
                 articleMarkdown.Content = updatedArticle.Markdown;
-                articleHtml.Content = CommonMark.CommonMarkConverter.Convert(updatedArticle.Markdown);
+                articleHtml.Content = CommonMarkConverter.Convert(updatedArticle.Markdown);
 
                 var firstParagraph = Utils.FirstParagraph(articleHtml.Content);
                 article.Html = firstParagraph;
@@ -408,7 +416,8 @@ namespace BansheeBlog
                 }
             });
 
-            await server.RunAsync();
+
+            await server.RunAsync("*");
         }
     }
 }

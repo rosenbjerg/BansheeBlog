@@ -5,6 +5,7 @@ export default (config, env, helpers) => {
 	config.devServer = {
 		hot: true,
 		quiet: true,
+		noInfo: true,
 		publicPath: '/',
 		historyApiFallback: true,
 		proxy: [

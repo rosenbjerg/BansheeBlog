@@ -10,7 +10,7 @@ namespace BansheeBlog
         private readonly ConcurrentDictionary<string, HandlebarsCacheFile> _cachedFiles = new ConcurrentDictionary<string, HandlebarsCacheFile>();
         private static HandlebarsCache _instance;
 
-        public static HandlebarsCache Instance => _instance ?? (_instance = new HandlebarsCache());
+        public static readonly HandlebarsCache Instance = new HandlebarsCache();
 
         public Action<TextWriter, object> GetRenderer(string filePath)
         {
@@ -40,8 +40,6 @@ namespace BansheeBlog
                     _renderer = Handlebars.Compile(streamReader);
                     _updated = DateTime.UtcNow;
                 }
-
-                Console.WriteLine(_filePath + " updated");
             }
 
             public Action<TextWriter, object> Renderer

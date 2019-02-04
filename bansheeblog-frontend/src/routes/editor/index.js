@@ -1,11 +1,12 @@
 import { h, Component } from 'preact';
 import style from './style.css';
 import TokenInput from 'preact-token-input';
-import Typography from 'preact-material-components/Typography';
-import TextField from 'preact-material-components/TextField';
 import Icon from 'preact-material-components/Icon';
-import 'preact-material-components/Typography/style.css';
+import TextField from 'preact-material-components/TextField';
+import Typography from 'preact-material-components/Typography';
+import 'preact-material-components/Icon/style.css';
 import 'preact-material-components/TextField/style.css';
+import 'preact-material-components/Typography/style.css';
 import { Get, Put } from '../../Fetcher';
 
 import SimpleMDE from 'simplemde';

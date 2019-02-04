@@ -6,5 +6,54 @@
 
 .card {
 	padding: 12px;
-	margin-bottom: 8px;
+	max-width: 24.9%;
+	min-width: 350px;
+	margin: 12px;
+	display: inline-block !important;
+}
+
+.grid {
+
+	display: inline-grid;
+	grid-template-columns: auto 34px;
+	grid-template-rows: 2rem auto;
+}
+
+.actions {
+	grid-column-start: 2;
+	grid-column-end: 3;
+	grid-row-start: 1;
+	grid-row-end: 3;
+}
+
+.title {
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 1;
+	grid-row-end: 2;
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	line-height: 1.5rem;     /* fallback */
+	max-height: 3rem;      /* fallback */
+	-webkit-line-clamp: 1;
+	-webkit-box-orient: vertical;
+}
+
+.content {
+	grid-column-start: 1;
+	grid-column-end: 2;
+	grid-row-start: 2;
+	grid-row-end: 3;
+}
+
+.text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	line-height: 1.5rem;     /* fallback */
+	max-height: 4rem;      /* fallback */
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 }

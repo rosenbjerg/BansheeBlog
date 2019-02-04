@@ -1,7 +1,7 @@
 :root {
     --mdc-theme-primary: #212121;
     --font-color: #212121;
-    --mdc-theme-background: #F5F5F5;
+    --mdc-theme-background: #FAFAFA;
 }
 
 html, body {
@@ -75,6 +75,7 @@ html, body {
     border-radius: 50%;
     transition: background-color 500ms;
     user-select: none;
+    max-width: 34px;
 }
 .mdc-top-app-bar__icon:hover, .mdc-icon:hover {
     background-color: rgba(224,224,224, 0.3);
