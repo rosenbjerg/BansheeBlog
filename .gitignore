@@ -426,3 +426,4 @@ __pycache__/
 # End of https://www.gitignore.io/api/node,webstorm,visualstudio
 *.sqlite-shm
 *.sqlite-wal
+bansheeblog-backend/credentials.txt
