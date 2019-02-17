@@ -5,7 +5,7 @@ using Red;
 using SQLite;
 using UAParser;
 
-namespace BansheeBlog
+namespace BansheeBlog.Utility
 {
     public class Tracking
     {

@@ -1,6 +1,6 @@
 using SQLite;
 
-namespace BansheeBlog
+namespace BansheeBlog.Models
 {
     class User
     {

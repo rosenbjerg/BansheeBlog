@@ -9,3 +9,16 @@
 	max-width: 800px;
 	margin: 8px auto auto;
 }
+
+.files {
+	font-size: 12pt;
+}
+
+.fileList {
+	max-height: 360px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+.fileList:empty::after {
+	content: 'Nothing uploaded yet';
+}

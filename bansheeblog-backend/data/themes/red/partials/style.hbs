@@ -4,7 +4,8 @@
         --tint-color: #ab4642;
         --link-color: #3E2723;
 		--title-font-size: 24pt;
-		--font-size: 14pt;
+		--nav-font-size: 14pt;
+		--font-size: 13pt;
 	}
 
     html, body {
@@ -41,6 +42,7 @@
         width: 25%;
         border-right: 2px solid var(--tint-color);
         font-family: 'Black Han Sans', sans-serif;
+		font-size: var(--nav-font-size);
     }
 
     nav li {
@@ -95,12 +97,14 @@
         word-break: break-all;
     }
 
+	section p {
+		font-size: var(--font-size);
+	}
     section img {
         max-width: 100%;
     }
     section.post-content-short p {
         margin-bottom: 0;
-		font-size: var(--font-size);
     }
     a.post-content-short {
         float: right;

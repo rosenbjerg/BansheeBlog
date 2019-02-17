@@ -10,7 +10,6 @@ import Header from './header';
 import Articles from '../routes/articles';
 import Editor from '../routes/editor';
 import Login from '../routes/login';
-import Profile from '../routes/profile';
 import Settings from '../routes/settings';
 import NotFound from '../routes/404';
 import { Get } from '../Fetcher';

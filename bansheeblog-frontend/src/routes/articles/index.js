@@ -67,39 +67,44 @@ export default class Articles extends Component {
 		this.load();
 	}
 
+	renderArticle = article => {
+		if (article.__edit === undefined) {
+			article.__edit = () => route(`/admin/editor/${article.Id}`);
+			article.__delete = this.openDeletePrompt(article);
+			article.__togglePublic = this.togglePublicStatus(article);
+		}
+		return (
+			<Card class={style.card}>
+				<span class={style.grid}>
+					<div className={style.title} title={article.Title}>
+						<Typography class="truncate" headline5>{article.Title}</Typography>
+					</div>
+					<div>
+						<Typography body2>{article.Created}</Typography>
+					</div>
+					<span className={style.content}>
+						<Typography body1>
+							<Markup class={style.text} markup={article.Html} />
+						</Typography>
+					</span>
+					<span className={style.actions}>
+						<Icon title="Edit article" onClick={article.__edit}>edit</Icon>
+						<span className={article.Public ? '' : 'untoggled'}>
+							<Icon title="Toggle public" onClick={article.__togglePublic}>public</Icon>
+						</span>
+						<Icon title="Delete article" onClick={article.__delete}>delete</Icon>
+					</span>
+				</span>
+			</Card>
+		);
+	};
+
 	render(props, state) {
 		return (
 			<div class={style.home}>
 				<Typography headline4>Articles</Typography>
 				<div>
-					{state.articles.map(article => {
-						if (article.__edit === undefined) {
-							article.__edit = () => route(`/admin/editor/${article.Id}`);
-							article.__delete = this.openDeletePrompt(article);
-							article.__togglePublic = this.togglePublicStatus(article);
-						}
-						return (
-							<Card class={style.card}>
-								<span class={style.grid}>
-									<div className={style.title} title={article.Title}>
-										<Typography class="truncate" headline5>{article.Title}</Typography>
-									</div>
-									<span className={style.content}>
-										<Typography body1>
-											<Markup class={style.text} markup={article.Html} />
-										</Typography>
-									</span>
-									<span className={style.actions}>
-										<Icon title="Edit article" onClick={article.__edit}>edit</Icon>
-										<span className={article.Public ? '' : 'untoggled'}>
-											<Icon title="Toggle public" onClick={article.__togglePublic}>public</Icon>
-										</span>
-										<Icon title="Delete article" onClick={article.__delete}>delete</Icon>
-									</span>
-								</span>
-							</Card>
-						);
-					})}
+					{state.articles.map(this.renderArticle)}
 					{!state.articles.length && (
 						<p>No articles created yet. Go to the editor and start typing!</p>
 					)}

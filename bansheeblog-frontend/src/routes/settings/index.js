@@ -1,7 +1,9 @@
+/* eslint-disable no-mixed-spaces-and-tabs */
 import { h, Component } from 'preact';
 import Markup from 'preact-markup';
 import Card from 'preact-material-components/Card';
 import Typography from 'preact-material-components/Typography';
+import FormField from 'preact-material-components/FormField';
 import Dialog from 'preact-material-components/Dialog';
 import Icon from 'preact-material-components/Icon';
 
@@ -24,18 +26,30 @@ import Select from 'preact-material-components/Select';
 import 'preact-material-components/List/style.css';
 import 'preact-material-components/Menu/style.css';
 import 'preact-material-components/Select/style.css';
+import 'preact-material-components/FormField/style.css';
 import linkState from 'linkstate';
+
 
 export default class Settings extends Component {
 
 	state = {
 		settings: {},
 		themes: [],
+		files: [],
 		currentPassword: '',
-		newPassword1: ''
+		newPassword1: '',
+		unzipPublicFile: false,
+		showUnzipPublicFile: false
 	};
 
-	articleToDelete = undefined;
+    prepareFiles = files => {
+    	files.sort();
+    	return files.map(f => ({
+    		name: f,
+    		copyLink: () => {},
+    		deleteFile: () => {}
+    	}));
+    };
 
 	load = async () => {
 		const requests = [
@@ -47,13 +61,61 @@ export default class Settings extends Component {
 		const settings = responses[0];
 		const themes = responses[1];
 
-		console.log('settings', settings);
-		console.log('themes', themes);
 		this.setState({ settings, themes });
 	};
 
+
 	bindManageThemesDialog = ref => this.uploadThemeDialog = ref;
-	bindUploadThemeForm = ref => this.uploadThemeForm = ref;
+    bindManagePublicFilesDialog = ref => this.managePublicFilesForm = ref;
+
+    submitThemeUpload = async ev => {
+    	ev.preventDefault();
+    	const formData = new FormData(ev.target);
+    	const response = await Post('/api/theme', formData, false);
+
+    	if (response.ok){
+    		const themes = await response.json();
+    		this.setState({ themes });
+    		console.log('themes', themes);
+    		ev.target.reset();
+    	}
+    	else {
+    		Globals.showSnackbar('Could not upload theme');
+    	}
+
+    };
+    submitPublicFileUpload = async ev => {
+    	ev.preventDefault();
+    	const formData = new FormData(ev.target);
+    	formData.append('unzip', this.state.showUnzipPublicFile && this.state.unzipPublicFile);
+    	const response = await Post('/api/file', formData, false);
+
+    	if (response.ok){
+    		const files = this.prepareFiles(await response.json());
+    		this.setState({ files });
+    		ev.target.reset();
+    	}
+    	else {
+    		Globals.showSnackbar('Could not upload file');
+    	}
+
+    };
+    submitPasswordChange = async ev => {
+    	ev.preventDefault();
+    	const formData = new FormData(ev.target);
+    	if (formData.newPassword1 !== formData.newPassword2){
+    		Globals.showSnackbar('The two password are not the same');
+    		return;
+    	}
+    	const response = await Post('/api/changepassword', formData, false);
+    	if (response.ok){
+    		Globals.showSnackbar('Password has been changed');
+    	}
+    	else {
+    		Globals.showSnackbar('Could not change the password');
+    	}
+    	ev.target.reset();
+    };
 
 	save = async () => {
 		const reponse = await Post('/api/settings', this.state.settings);
@@ -64,10 +126,12 @@ export default class Settings extends Component {
 
 	componentDidMount() {
 		this.load();
+		this.clipboard = new ClipboardJS('.copy');
 	}
 
-	async componentWillUnmount() {
-		await this.save();
+	componentWillUnmount() {
+		this.save();
+		this.clipboard.destroy();
 	}
 
 	themeChanged = ev => {
@@ -75,74 +139,123 @@ export default class Settings extends Component {
 		this.setState(s => s.settings.ActiveTheme = selected);
 	};
 	openManageThemeDialog = () => this.uploadThemeDialog.MDComponent.show();
+    openManagePublicFileDialog = () => {
+    	Get('/api/files')
+    		.then(res => res.json())
+    		.then(this.prepareFiles)
+    		.then(files => this.setState({ files }));
 
-	render(props, state) {
-		return (
-			<div class={style.home}>
-				<Card class={style.card}>
-					<Typography headline4>Settings</Typography>
-
-					<Typography headline6>Blog info</Typography>
-					<TextField className="fullwidth" label="Author" value={state.settings.Author} onChange={linkState(this, 'settings.Author')} />
-					<TextField className="fullwidth" label="Blog title" value={state.settings.BlogTitle} onChange={linkState(this, 'settings.BlogTitle')} />
-					<TextField className="fullwidth" label="Blog description" value={state.settings.BlogDescription} onChange={linkState(this, 'settings.BlogDescription')} />
-
-					<Typography headline6>Analytics</Typography>
-					<TextField className="fullwidth" label="Google Analytics Tracking ID" value={state.settings.GoogleAnalyticsTrackingId} onChange={linkState(this, 'settings.GoogleAnalyticsTrackingId')} />
-					<div style={{ margin: '8px 0 8px 4px' }}>
-						<Typography style={{ 'margin-right': '10px' }} body1>Use server-side tracking to monitor visits</Typography>
-						<Switch checked={state.settings.UseServerSideTracking} onChange={linkState(this, 'settings.UseServerSideTracking')} />
-					</div>
-
-					<Typography headline6>Themes</Typography>
-					<Select hintText="Blog theme"
-						selectedIndex={state.themes.indexOf(state.settings.ActiveTheme) + 1}
-						onInput={this.themeChanged}
-					>
-						{state.themes.map(theme => <Select.Item>{theme}</Select.Item>)}
-					</Select>
-
-					<Button onClick={this.openManageThemeDialog}>Manage blog themes</Button>
-					{/*<Button onClick={this.save}>Save blog settings</Button>*/}
+    	this.managePublicFilesForm.MDComponent.show();
+    };
 
 
-					<Typography headline6>Change your admin password</Typography>
-					<form>
-						<TextField value={state.currentPassword} onChange={linkState(this, 'currentPassword')} class="fullwidth" label="Current password" />
-						<TextField value={state.newPassword1} onChange={linkState(this, 'newPassword1')} class="fullwidth" label="New password" />
-						<TextField value={state.newPassword2} onChange={linkState(this, 'newPassword2')} class="fullwidth" label="Repeat new password" />
-						<Button class="fullwidth">Change password</Button>
-					</form>
+    onPublicFileToUploadSelected = ev => this.setState({ showUnzipPublicFile: Array.from(ev.target.files).findIndex(file => file.name.toLowerCase().endsWith('.zip')) > -1 });
 
-				</Card>
+    render(props, state) {
+    	return (
+    		<div class={style.home}>
+    			<Card class={style.card}>
+    				<Typography headline4>Settings</Typography>
 
-				<Dialog ref={this.bindManageThemesDialog}>
-					<Dialog.Header>Manage blog themes</Dialog.Header>
-					<Dialog.Body>
-						<Typography>Currently installed themes</Typography>
-						<ul>
-							{state.themes.map(theme => (
-								<li key={theme}>
-									<Typography headline6>{theme}</Typography>
-									{theme !== 'default' && <Icon>delete_permanently</Icon>}
-								</li>
-							))}
-						</ul>
+    				<Typography headline6>Blog info</Typography>
+    				<TextField className="fullwidth" label="Author" value={state.settings.Author} onChange={linkState(this, 'settings.Author')} />
+    				<TextField className="fullwidth" label="Blog title" value={state.settings.BlogTitle} onChange={linkState(this, 'settings.BlogTitle')} />
+    				<TextField className="fullwidth" label="Blog description" value={state.settings.BlogDescription} onChange={linkState(this, 'settings.BlogDescription')} />
 
-						<br />
-						<Typography>Upload more themes</Typography>
-						<form ref={this.bindUploadThemeForm}>
-							<div>
-								<input type="file" accept=".zip" />
-							</div>
-							<Button type="submit">Upload</Button>
-						</form>
-					</Dialog.Body>
-					<Dialog.Footer>
-						<Dialog.FooterButton accept>Done</Dialog.FooterButton>
-					</Dialog.Footer>
-				</Dialog>
-			</div>
-		);
-	}
+    				<Typography headline6>Analytics</Typography>
+    				<TextField className="fullwidth" label="Google Analytics Tracking ID" value={state.settings.GoogleAnalyticsTrackingId} onChange={linkState(this, 'settings.GoogleAnalyticsTrackingId')} />
+    				<div style={{ margin: '8px 0 8px 4px' }}>
+    					<Typography style={{ 'margin-right': '10px' }} body1>Use server-side tracking to monitor visits</Typography>
+    					<Switch checked={state.settings.UseServerSideTracking} onChange={linkState(this, 'settings.UseServerSideTracking')} />
+    				</div>
+    				<Button onClick={this.openViewAnalyticsDialog}>View analytics</Button>
+
+    				<Typography headline6>Themes</Typography>
+    				<Select hintText="Blog theme" selectedIndex={state.themes.indexOf(state.settings.ActiveTheme) + 1} onInput={this.themeChanged}>
+    					{state.themes.map(theme => <Select.Item>{theme}</Select.Item>)}
+    				</Select>
+    				<Button onClick={this.openManageThemeDialog}>Manage blog themes</Button>
+
+    				<Typography headline6>Public files</Typography>
+    				<Button onClick={this.openManagePublicFileDialog}>Manage public files</Button>
+
+    				<Typography headline6>Change your admin password</Typography>
+    				<form onSubmit={this.submitPasswordChange}>
+    					<TextField name="oldPassword"  class="fullwidth" label="Current password" required />
+    					<TextField name="newPassword1" class="fullwidth" label="New password" required minLength="8" maxLength="60" />
+    					<TextField name="newPassword2" class="fullwidth" label="Repeat new password" required minLength="8" maxLength="60" />
+    					<Button type="submit" class="fullwidth">Change password</Button>
+    				</form>
+
+    			</Card>
+
+
+    			<Dialog ref={this.bindManageThemesDialog}>
+    				<Dialog.Header>Manage blog themes</Dialog.Header>
+    				<Dialog.Body>
+    					<Typography>Currently installed themes</Typography>
+    					<ul>
+    						{state.themes.map(theme => (
+    							<li key={theme}>
+									<FormField>
+										<Typography headline6>{theme}</Typography>
+										{theme !== 'default' && <Icon>delete_permanently</Icon>}
+									</FormField>
+    							</li>
+    						))}
+    					</ul>
+    					<br />
+    					<Typography>Upload more themes</Typography>
+    					<form onSubmit={this.submitThemeUpload}>
+    						<div>
+    							<input name="theme" type="file" accept=".zip" required />
+    						</div>
+    						<Button type="submit">Upload</Button>
+    					</form>
+    				</Dialog.Body>
+    				<Dialog.Footer>
+    					<Dialog.FooterButton accept>Done</Dialog.FooterButton>
+    				</Dialog.Footer>
+    			</Dialog>
+
+
+    			<Dialog ref={this.bindManagePublicFilesDialog}>
+    				<Dialog.Header>Manage public files</Dialog.Header>
+    				<Dialog.Body>
+    					<Typography>All files</Typography>
+    					<ul className={style.fileList}>
+    						{state.files.map(file => (
+    							<li key={file.name} className={style.files}>
+    								<FormField>
+    									<Typography body1>{file.name}</Typography>
+    									<Icon onClick={file.copyLink}>insert_link</Icon>
+    									<Icon onClick={file.deleteFile}>delete_permanently</Icon>
+    								</FormField>
+    							</li>
+    						))}
+    					</ul>
+
+    					<br />
+    					<Typography>Upload more files</Typography>
+    					<form onSubmit={this.submitPublicFileUpload}>
+    						<div>
+    							<input name="files" onChange={this.onPublicFileToUploadSelected} type="file" required multiple />
+    						</div>
+    						<Button type="submit">Upload</Button>
+    						{state.showUnzipPublicFile && (
+    							<div style={{ margin: '8px 0 8px 4px' }}>
+    								<Typography style={{ 'margin-right': '10px' }} body1>Unzip file(s)?</Typography>
+    								<Switch checked={state.unzipPublicFile} onChange={linkState(this, 'unzipPublicFile')} />
+    							</div>
+    						)}
+    					</form>
+    				</Dialog.Body>
+    				<Dialog.Footer>
+    					<Dialog.FooterButton accept>Done</Dialog.FooterButton>
+    				</Dialog.Footer>
+    			</Dialog>
+
+    		</div>
+    	);
+    }
 }

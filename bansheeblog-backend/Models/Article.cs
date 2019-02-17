@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using SQLite;
 
-namespace BansheeBlog
+namespace BansheeBlog.Models
 {
-    class Article
+    public class Article
     {
         [PrimaryKey] 
         public Guid Id { get; set; } = Guid.Empty;
@@ -17,6 +15,8 @@ namespace BansheeBlog
         
         [JsonProperty(Required = Required.Always)]
         public string Title { get; set; }
+        
+        [JsonProperty(Required = Required.Always)]
         public string Tags { get; set; }
         
         public DateTime Created { get; set; }

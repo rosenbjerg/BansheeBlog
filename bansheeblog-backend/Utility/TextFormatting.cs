@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Net;
 using System.Text.RegularExpressions;
+using BansheeBlog.Models;
 
-namespace BansheeBlog
+namespace BansheeBlog.Utility
 {
-    static class Utils
+    public static class TextFormatting
     {
         private static readonly Regex FirstParagraphRegex = new Regex("(<p>[\\s\\S]*?<\\/p>)", RegexOptions.Compiled);
 
@@ -36,5 +37,7 @@ namespace BansheeBlog
 
             existing.Public = updated.Public;
         }
+        
+        
     }
 }

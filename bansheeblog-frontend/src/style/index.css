@@ -104,9 +104,6 @@ html, body {
     width: 100%;
     margin-bottom: 20px;
 }
-.CodeMirror {
-    max-height: 50%;
-}
 .mdc-snackbar {
     z-index: 1000;
 }

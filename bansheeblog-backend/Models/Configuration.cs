@@ -1,19 +1,26 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using Newtonsoft.Json;
 
-namespace BansheeBlog
+namespace BansheeBlog.Models
 {
-    class Configuration
+    public class Configuration
     {
-        public string DatabaseFilePath { get; set; } 
+        [JsonProperty(Required = Required.Always)]
+        public string DatabaseFilePath { get; set; }
+        
+        [JsonProperty(Required = Required.Always)]
         public int Port { get; set; }
+        
+        [JsonProperty(Required = Required.Always)]
         public string PublicDirectory { get; set; }
+        
+        [JsonProperty(Required = Required.Always)]
         public string ThemeDirectory { get; set; } 
+        
+        [JsonProperty(Required = Required.Always)]
         public string TempDirectory { get; set; } 
-
+        
         public static Configuration Load(string filepath)
         {
             var numbers = Enumerable.Range(0, 100).Where(x => x % 2 == 0);

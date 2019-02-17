@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using HandlebarsDotNet;
 
-namespace BansheeBlog
+namespace BansheeBlog.Utility
 {
     internal class HandlebarsCache
     {
