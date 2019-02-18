@@ -92,8 +92,8 @@ namespace BansheeBlog
 
             // Public routes
             server.Get("/", PublicRoutes.SendFrontpage(settings, tracking, db, config));
-            server.Get("/favicon.ico", PublicRoutes.SendFavicon());
             server.Get("/:slug", PublicRoutes.FindFromSlug(settings, tracking, db, config));
+            server.Get("/favicon.ico", PublicRoutes.SendFavicon());
 
 
             // Admin routes
@@ -103,26 +103,26 @@ namespace BansheeBlog
             server.Post("/api/changepassword", Auth, AuthenticationRoutes.ChangePassword(db));
 
 
-            server.Get("/api/articles", Auth, ArticleRoutes.GetAll(db));
+            server.Get("/api/articles", Auth, ArticleRoutes.FetchList(db));
             server.Get("/api/article/:id", Auth, ArticleRoutes.FetchOne(db));
             server.Get("/api/article/:id/markdown", Auth, ArticleRoutes.FetchOneMarkdown(db));
 
            
-            server.Put("/api/article/meta", Auth, ArticleRoutes.FetchMeta(db));
-
             server.Put("/api/article", Auth, ArticleRoutes.Update(db));
+            server.Put("/api/article/meta", Auth, ArticleRoutes.UpdateMeta(db));
             server.Delete("/api/article", Auth, ArticleRoutes.Remove(db));
 
-            server.Get("/api/settings", Auth, SettingsRoutes.Send(settings));
+            server.Get("/api/settings", Auth, SettingsRoutes.Fetch(settings));
             server.Post("/api/settings", Auth, SettingsRoutes.Update(settings));
             
 
             server.Get("/api/files", Auth, StaticFileRoutes.FetchList(config));
             server.Post("/api/file", Auth, StaticFileRoutes.Upload(config));
+            server.Delete("/api/theme", Auth, StaticFileRoutes.Remove(config));
 
             server.Get("/api/themes", Auth, ThemeRoutes.FetchList(config));
             server.Post("/api/theme", Auth, ThemeRoutes.Upload(config));
-            server.Delete("/api/theme", Auth, ThemeRoutes.Delete(config));
+            server.Delete("/api/theme", Auth, ThemeRoutes.Remove(config));
 
 
             await server.RunAsync("*");

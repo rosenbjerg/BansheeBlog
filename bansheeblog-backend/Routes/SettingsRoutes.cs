@@ -35,7 +35,7 @@ namespace BansheeBlog.Routes
             };
         }
 
-        public static Func<Request, Response, Task> Send(Settings settings)
+        public static Func<Request, Response, Task> Fetch(Settings settings)
         {
             return async (req, res) => { await res.SendJson(settings); };
         }

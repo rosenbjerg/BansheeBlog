@@ -11,7 +11,7 @@ namespace BansheeBlog.Routes
 {
     public static class ThemeRoutes
     {
-        public static Func<Request, Response, Task> Delete(Configuration config)
+        public static Func<Request, Response, Task> Remove(Configuration config)
         {
             return async (req, res) =>
             {

@@ -46,7 +46,7 @@ namespace BansheeBlog.Routes
             };
         }
 
-        public static Func<Request, Response, Task> GetAll(SQLiteAsyncConnection db)
+        public static Func<Request, Response, Task> FetchList(SQLiteAsyncConnection db)
         {
             return async (req, res) =>
             {
@@ -132,7 +132,7 @@ namespace BansheeBlog.Routes
             };
         }
 
-        public static Func<Request, Response, Task> FetchMeta(SQLiteAsyncConnection db)
+        public static Func<Request, Response, Task> UpdateMeta(SQLiteAsyncConnection db)
         {
             return async (req, res) =>
             {

@@ -79,9 +79,9 @@ export default class Articles extends Component {
 					<div className={style.title} title={article.Title}>
 						<Typography class="truncate" headline5>{article.Title}</Typography>
 					</div>
-					<div>
-						<Typography body2>{article.Created}</Typography>
-					</div>
+					<i>
+						<Typography body2>{new Date(article.Created).toLocaleString()}</Typography>
+					</i>
 					<span className={style.content}>
 						<Typography body1>
 							<Markup class={style.text} markup={article.Html} />

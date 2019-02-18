@@ -49,9 +49,7 @@ namespace BansheeBlog.Routes
                 await res.SendJson(GetPublicFiles(config));
             };
         }
-        
        
-
         private static List<string> GetPublicFiles(Configuration config)
         {
             var staticFileFolder = Path.Combine(config.PublicDirectory, "files");
@@ -62,6 +60,11 @@ namespace BansheeBlog.Routes
                     .Trim('/'))
                 .ToList();
             return fileNames;
+        }
+
+        public static Func<Request, Response, Task> Remove(Configuration config)
+        {
+            throw new NotImplementedException();
         }
     }
 }
