@@ -8,7 +8,6 @@ namespace BansheeBlog.Utility
     internal class HandlebarsCache
     {
         private readonly ConcurrentDictionary<string, HandlebarsCacheFile> _cachedFiles = new ConcurrentDictionary<string, HandlebarsCacheFile>();
-        private static HandlebarsCache _instance;
 
         public static readonly HandlebarsCache Instance = new HandlebarsCache();
 

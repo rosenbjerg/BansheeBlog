@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BansheeBlog.Models;
 using BansheeBlog.Utility;
 using Red;
+using Red.Extensions;
 
 namespace BansheeBlog.Routes
 {
@@ -18,8 +19,8 @@ namespace BansheeBlog.Routes
             return async (req, res) =>
             {
                 var form = await req.GetFormDataAsync();
-                var unzip = form["unzip"][0] == "true";
-                var savePath = Path.Combine(config.PublicDirectory, "files");
+                var unzip = form["unzip"] == "true";
+                var savePath = Path.Combine(config.PublicDirectory, "static");
                 
                 foreach (var formFile in form.Files)
                 {
@@ -38,7 +39,7 @@ namespace BansheeBlog.Routes
                     }
                     
                 }
-                await res.SendJson(GetPublicFiles(config), HttpStatusCode.OK);
+                await res.SendJson(GetPublicFiles(config));
             };
         }
 
@@ -52,7 +53,7 @@ namespace BansheeBlog.Routes
        
         private static List<string> GetPublicFiles(Configuration config)
         {
-            var staticFileFolder = Path.Combine(config.PublicDirectory, "files");
+            var staticFileFolder = Path.Combine(config.PublicDirectory, "static");
             var files = Directory.EnumerateFiles(staticFileFolder, "*", SearchOption.AllDirectories);
             var fileNames = files.Select(path => path
                     .Replace(staticFileFolder, "")
@@ -64,7 +65,25 @@ namespace BansheeBlog.Routes
 
         public static Func<Request, Response, Task> Remove(Configuration config)
         {
-            throw new NotImplementedException();
+            return async (req, res) =>
+            {
+                var staticFiles = Path.Combine(config.PublicDirectory, "static");
+                var filename = await req.ParseBodyAsync<string>();
+                filename = filename
+                    .Replace('/', Path.PathSeparator)
+                    .Replace('\\', Path.PathSeparator);
+                
+                var filepath = Path.GetFullPath(Path.Combine(staticFiles, filename));
+                if (!filepath.StartsWith(staticFiles) || !File.Exists(filepath))
+                {
+                    await res.SendStatus(HttpStatusCode.NotFound);
+                }
+                else
+                {
+                    File.Delete(filepath);
+                    await res.SendStatus(HttpStatusCode.OK);
+                }
+            };
         }
     }
 }

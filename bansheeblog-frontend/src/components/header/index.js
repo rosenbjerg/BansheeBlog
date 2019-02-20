@@ -17,12 +17,12 @@ export default class Header extends Component {
     				<TopAppBar.Row>
     					<TopAppBar.Section align-start>
     						<TopAppBar.Title onClick={this.openArticles} class={style.title}>BansheeBlog</TopAppBar.Title>
-    						<TopAppBar.Icon title="Write new article" onClick={this.openEditor}>edit</TopAppBar.Icon>
-    						<TopAppBar.Icon title="All articles" onClick={this.openArticles}>view_list</TopAppBar.Icon>
-    						<TopAppBar.Icon title="Change settings" onClick={this.openSettings}>settings</TopAppBar.Icon>
+    						<TopAppBar.Icon class="hoverIcon" title="Write new article" onClick={this.openEditor}>edit</TopAppBar.Icon>
+    						<TopAppBar.Icon class="hoverIcon" title="All articles" onClick={this.openArticles}>view_list</TopAppBar.Icon>
+    						<TopAppBar.Icon class="hoverIcon" title="Change settings" onClick={this.openSettings}>settings</TopAppBar.Icon>
     					</TopAppBar.Section>
     					<TopAppBar.Section align-end shrink-to-fit>
-    						<TopAppBar.Icon>exit_to_app</TopAppBar.Icon>
+    						<TopAppBar.Icon class="hoverIcon">exit_to_app</TopAppBar.Icon>
     					</TopAppBar.Section>
     				</TopAppBar.Row>
     			</TopAppBar>

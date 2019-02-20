@@ -21,6 +21,8 @@ import style from './style.css';
 import { Delete, Get, Post } from '../../Fetcher';
 import { route } from 'preact-router';
 import Globals from '../../Globals';
+import copy from 'clipboard-copy';
+import Upload from '../../components/upload';
 
 import Select from 'preact-material-components/Select';
 import 'preact-material-components/List/style.css';
@@ -39,15 +41,18 @@ export default class Settings extends Component {
 		currentPassword: '',
 		newPassword1: '',
 		unzipPublicFile: false,
-		showUnzipPublicFile: false
+		showUnzipPublicFile: false,
+		selectedFiles: []
 	};
 
     prepareFiles = files => {
     	files.sort();
+    	const port = location.port === 80 ? '' : ':' + location.port;
+    	const url = `${location.protocol}//${location.hostname}${port}/static/`;
     	return files.map(f => ({
     		name: f,
-    		copyLink: () => {},
-    		deleteFile: () => {}
+    		copyLink: () => copy(url + f),
+    		remove: this.openDeleteDialog('file', f)
     	}));
     };
 
@@ -59,12 +64,12 @@ export default class Settings extends Component {
 
 		const responses = await Promise.all(requests);
 		const settings = responses[0];
-		const themes = responses[1];
+		const themes = responses[1].map(name => ({ name, remove: this.openDeleteDialog('theme', name) }));
 
 		this.setState({ settings, themes });
 	};
 
-
+	bindDeleteDialog = ref => this.deleteDialog = ref;
 	bindManageThemesDialog = ref => this.uploadThemeDialog = ref;
     bindManagePublicFilesDialog = ref => this.managePublicFilesForm = ref;
 
@@ -84,7 +89,7 @@ export default class Settings extends Component {
     	}
 
     };
-    submitPublicFileUpload = async ev => {
+    submitStaticFileUpload = async ev => {
     	ev.preventDefault();
     	const formData = new FormData(ev.target);
     	formData.append('unzip', this.state.showUnzipPublicFile && this.state.unzipPublicFile);
@@ -92,7 +97,11 @@ export default class Settings extends Component {
 
     	if (response.ok){
     		const files = this.prepareFiles(await response.json());
-    		this.setState({ files });
+    		this.setState({
+    			files,
+    			selectedFiles: [],
+    			unzipPublicFile: false,
+    			showUnzipPublicFile: false });
     		ev.target.reset();
     	}
     	else {
@@ -148,8 +157,33 @@ export default class Settings extends Component {
     	this.managePublicFilesForm.MDComponent.show();
     };
 
+    openDeleteDialog = (type, name) => () => {
+    	this.setState({
+    		toDeleteType: type,
+    		toDelete: name
+    	});
+    	this.deleteDialog.MDComponent.show();
+    };
+    deleteThemeOrFile = async () => {
+    	const type = this.state.toDeleteType;
+    	const name = this.state.toDelete;
+    	const reponse = await Delete(`/api/${type}`, name, false);
+    	if (reponse.ok) {
+    		Globals.showSnackbar(`The ${type} has been deleted`);
+    		this.setState(s => {
+    			const collection = s[type + 's'];
+    			collection.splice(collection.indexOf(name));
+    		});
+    	}
+    };
 
-    onPublicFileToUploadSelected = ev => this.setState({ showUnzipPublicFile: Array.from(ev.target.files).findIndex(file => file.name.toLowerCase().endsWith('.zip')) > -1 });
+
+    onPublicFileToUploadSelected = files => {
+    	this.setState({
+    		showUnzipPublicFile: files.findIndex(file => file.name.toLowerCase().endsWith('.zip')) > -1,
+    		selectedFiles: files
+    	});
+    };
 
     render(props, state) {
     	return (
@@ -197,10 +231,10 @@ export default class Settings extends Component {
     					<ul>
     						{state.themes.map(theme => (
     							<li key={theme}>
-									<FormField>
-										<Typography headline6>{theme}</Typography>
-										{theme !== 'default' && <Icon>delete_permanently</Icon>}
-									</FormField>
+    								<FormField>
+    									<Typography headline6>{theme.name}</Typography>
+    									{theme.name !== 'default' && <Icon class="hoverIcon" onClick={theme.remove}>delete_permanently</Icon>}
+    								</FormField>
     							</li>
     						))}
     					</ul>
@@ -208,7 +242,7 @@ export default class Settings extends Component {
     					<Typography>Upload more themes</Typography>
     					<form onSubmit={this.submitThemeUpload}>
     						<div>
-    							<input name="theme" type="file" accept=".zip" required />
+    							<Upload name="theme" accept=".zip" required />
     						</div>
     						<Button type="submit">Upload</Button>
     					</form>
@@ -220,7 +254,7 @@ export default class Settings extends Component {
 
 
     			<Dialog ref={this.bindManagePublicFilesDialog}>
-    				<Dialog.Header>Manage public files</Dialog.Header>
+    				<Dialog.Header>Manage static files</Dialog.Header>
     				<Dialog.Body>
     					<Typography>All files</Typography>
     					<ul className={style.fileList}>
@@ -228,8 +262,8 @@ export default class Settings extends Component {
     							<li key={file.name} className={style.files}>
     								<FormField>
     									<Typography body1>{file.name}</Typography>
-    									<Icon onClick={file.copyLink}>insert_link</Icon>
-    									<Icon onClick={file.deleteFile}>delete_permanently</Icon>
+    									<Icon class="hoverIcon" onClick={file.copyLink}>insert_link</Icon>
+    									<Icon class="hoverIcon" onClick={file.remove}>delete_permanently</Icon>
     								</FormField>
     							</li>
     						))}
@@ -237,9 +271,10 @@ export default class Settings extends Component {
 
     					<br />
     					<Typography>Upload more files</Typography>
-    					<form onSubmit={this.submitPublicFileUpload}>
+    					<form onSubmit={this.submitStaticFileUpload}>
     						<div>
-    							<input name="files" onChange={this.onPublicFileToUploadSelected} type="file" required multiple />
+    							{/*<input name="files" onChange={this.onPublicFileToUploadSelected} type="file" required multiple />*/}
+    							<Upload name="files" selected={state.selectedFiles} onChange={this.onPublicFileToUploadSelected} required multiple />
     						</div>
     						<Button type="submit">Upload</Button>
     						{state.showUnzipPublicFile && (
@@ -252,6 +287,18 @@ export default class Settings extends Component {
     				</Dialog.Body>
     				<Dialog.Footer>
     					<Dialog.FooterButton accept>Done</Dialog.FooterButton>
+    				</Dialog.Footer>
+    			</Dialog>
+
+
+    			<Dialog ref={this.bindDeleteDialog} onAccept={this.deleteThemeOrFile}>
+    				<Dialog.Header>Delete {state.toDeleteType}?</Dialog.Header>
+    				<Dialog.Body>
+    					<Typography body1>Are you sure you want to delete {state.toDelete}?</Typography>
+    				</Dialog.Body>
+    				<Dialog.Footer>
+    					<Dialog.FooterButton accept>Yes</Dialog.FooterButton>
+    					<Dialog.FooterButton accept primary>No</Dialog.FooterButton>
     				</Dialog.Footer>
     			</Dialog>
 

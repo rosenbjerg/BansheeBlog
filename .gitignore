@@ -1,3 +1,6 @@
+data/public/static/
+data/database/
+
 database.sqlite
 DotSettings.user
 config.json

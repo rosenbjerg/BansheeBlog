@@ -14,6 +14,7 @@ import 'simplemde/dist/simplemde.min.css';
 
 import linkState from 'linkstate';
 import Globals from '../../Globals';
+import TopAppBar from "../../components/header";
 
 const slugify = input =>
 	input.toLowerCase()
@@ -127,8 +128,8 @@ export default class Editor extends Component {
 			<div class={style.home}>
 				<div>
 					<Typography headline4>Article editor</Typography>
-					<Icon title="Toggle public" class={state.public ? '' : 'untoggled'} onClick={this.togglePublic}>public</Icon>
-					<Icon title="Save article" onClick={this.save}>save</Icon>
+					<Icon title="Toggle public" class={state.public ? 'hoverIcon' : 'hoverIcon untoggled'} onClick={this.togglePublic}>public</Icon>
+					<Icon class="hoverIcon" title="Save article" onClick={this.save}>save</Icon>
 				</div>
 				<div>
 					<TextField className="fullwidth" label="Title" value={state.title} onInput={this.setTitle} />

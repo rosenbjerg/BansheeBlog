@@ -2,10 +2,12 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
 using BansheeBlog.Utility;
 using Red;
+using Red.Extensions;
 
 namespace BansheeBlog.Routes
 {
@@ -15,7 +17,17 @@ namespace BansheeBlog.Routes
         {
             return async (req, res) =>
             {
-                
+                var themeName = await req.ParseBodyAsync<string>();
+                var themePath = Path.GetFullPath(Path.Combine(config.ThemeDirectory, themeName));
+                if (!themePath.StartsWith(config.ThemeDirectory) || !Directory.Exists(themePath))
+                {
+                    await res.SendStatus(HttpStatusCode.NotFound);
+                }
+                else
+                {
+                    Directory.Delete(themePath, true);
+                    await res.SendStatus(HttpStatusCode.OK);
+                }
             };
         }
 

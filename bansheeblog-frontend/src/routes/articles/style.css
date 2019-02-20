@@ -1,19 +1,23 @@
 .home {
-	padding: 74px 20px 20px;
+	padding: 74px 8px;
 	min-height: 100%;
 	width: 100%;
 }
 
+.header {
+	margin-left: 12px;
+}
+
 .card {
-	padding: 12px;
-	max-width: calc(25% - 24px);
+	padding: 8px;
+	max-width: calc(25% - 16px);
+	width: calc(100% - 16px);
 	min-width: 350px;
-	margin: 12px;
+	margin: 8px;
 	display: inline-block !important;
 }
 
 .grid {
-
 	display: inline-grid;
 	grid-template-columns: auto 34px;
 	grid-template-rows: 2rem auto;

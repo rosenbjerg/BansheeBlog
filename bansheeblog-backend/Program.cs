@@ -82,7 +82,7 @@ namespace BansheeBlog
             CreateFirstUser(db);
             
             // Create directories for later use
-            Directory.CreateDirectory(Path.Combine(config.PublicDirectory, "files"));
+            Directory.CreateDirectory(Path.Combine(config.PublicDirectory, "static"));
             Directory.CreateDirectory(config.TempDirectory);
 
             // Initialize partial templates
@@ -97,8 +97,8 @@ namespace BansheeBlog
 
 
             // Admin routes
-            server.Post("/api/login", AuthenticationRoutes.Login(db));
             server.Get("/api/verify", Auth, AuthenticationRoutes.Verify());
+            server.Post("/api/login", AuthenticationRoutes.Login(db));
             server.Post("/api/logout", Auth, AuthenticationRoutes.Logout());
             server.Post("/api/changepassword", Auth, AuthenticationRoutes.ChangePassword(db));
 
@@ -118,7 +118,7 @@ namespace BansheeBlog
 
             server.Get("/api/files", Auth, StaticFileRoutes.FetchList(config));
             server.Post("/api/file", Auth, StaticFileRoutes.Upload(config));
-            server.Delete("/api/theme", Auth, StaticFileRoutes.Remove(config));
+            server.Delete("/api/file", Auth, StaticFileRoutes.Remove(config));
 
             server.Get("/api/themes", Auth, ThemeRoutes.FetchList(config));
             server.Post("/api/theme", Auth, ThemeRoutes.Upload(config));

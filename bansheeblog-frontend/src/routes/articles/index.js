@@ -14,6 +14,7 @@ import 'preact-material-components/Typography/style.css';
 import { Delete, Get, Put } from '../../Fetcher';
 import { route } from 'preact-router';
 import Globals from '../../Globals';
+import TopAppBar from "../../components/header";
 
 export default class Articles extends Component {
 
@@ -54,6 +55,7 @@ export default class Articles extends Component {
 		const response = await Get('/api/articles');
 		if (response.ok) {
 			const articles = await response.json();
+			articles.sort((a1, a2) => a1.Created < a2.Created);
 			this.setState({ articles });
 		}
 		else {
@@ -77,22 +79,22 @@ export default class Articles extends Component {
 			<Card class={style.card}>
 				<span class={style.grid}>
 					<div className={style.title} title={article.Title}>
-						<Typography class="truncate" headline5>{article.Title}</Typography>
+						<Typography class="truncate" headline6>{article.Title}</Typography>
 					</div>
 					<i>
-						<Typography body2>{new Date(article.Created).toLocaleString()}</Typography>
+						<Typography subtitle2 >{new Date(article.Created).toLocaleString()}</Typography>
 					</i>
 					<span className={style.content}>
-						<Typography body1>
+						<Typography body2>
 							<Markup class={style.text} markup={article.Html} />
 						</Typography>
 					</span>
 					<span className={style.actions}>
-						<Icon title="Edit article" onClick={article.__edit}>edit</Icon>
+						<Icon class="hoverIcon" title="Edit article" onClick={article.__edit}>edit</Icon>
 						<span className={article.Public ? '' : 'untoggled'}>
-							<Icon title="Toggle public" onClick={article.__togglePublic}>public</Icon>
+							<Icon class="hoverIcon" title="Toggle public" onClick={article.__togglePublic}>public</Icon>
 						</span>
-						<Icon title="Delete article" onClick={article.__delete}>delete</Icon>
+						<Icon class="hoverIcon" title="Delete article" onClick={article.__delete}>delete</Icon>
 					</span>
 				</span>
 			</Card>
@@ -102,7 +104,7 @@ export default class Articles extends Component {
 	render(props, state) {
 		return (
 			<div class={style.home}>
-				<Typography headline4>Articles</Typography>
+				<Typography class={style.header} headline4>Articles</Typography>
 				<div>
 					{state.articles.map(this.renderArticle)}
 					{!state.articles.length && (
