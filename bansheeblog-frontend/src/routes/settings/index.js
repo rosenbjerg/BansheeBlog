@@ -1,6 +1,15 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 import { h, Component } from 'preact';
-import Markup from 'preact-markup';
+import isEqual from 'lodash/isEqual';
+import groupBy from 'lodash/groupBy';
+import orderBy from 'lodash/orderBy';
+import copy from 'clipboard-copy';
+import linkState from 'linkstate';
+import { Delete, Get, Post } from '../../Fetcher';
+import Globals from '../../Globals';
+import Upload from '../../components/upload';
+import style from './style.css';
+
 import Card from 'preact-material-components/Card';
 import Typography from 'preact-material-components/Typography';
 import FormField from 'preact-material-components/FormField';
@@ -17,19 +26,12 @@ import 'preact-material-components/Typography/style.css';
 import 'preact-material-components/Card/style.css';
 import 'preact-material-components/Button/style.css';
 import 'preact-material-components/TextField/style.css';
-import style from './style.css';
-import { Delete, Get, Post } from '../../Fetcher';
-import { route } from 'preact-router';
-import Globals from '../../Globals';
-import copy from 'clipboard-copy';
-import Upload from '../../components/upload';
 
 import Select from 'preact-material-components/Select';
 import 'preact-material-components/List/style.css';
 import 'preact-material-components/Menu/style.css';
 import 'preact-material-components/Select/style.css';
 import 'preact-material-components/FormField/style.css';
-import linkState from 'linkstate';
 
 
 export default class Settings extends Component {
@@ -38,6 +40,7 @@ export default class Settings extends Component {
 		settings: {},
 		themes: [],
 		files: [],
+		stats: {},
 		currentPassword: '',
 		newPassword1: '',
 		unzipPublicFile: false,
@@ -66,10 +69,12 @@ export default class Settings extends Component {
 		const settings = responses[0];
 		const themes = responses[1].map(name => ({ name, remove: this.openDeleteDialog('theme', name) }));
 
+		this.initialSettings = { ...settings };
 		this.setState({ settings, themes });
 	};
 
 	bindDeleteDialog = ref => this.deleteDialog = ref;
+	bindAnalyticsDialog = ref => this.analyticsDialog = ref;
 	bindManageThemesDialog = ref => this.uploadThemeDialog = ref;
     bindManagePublicFilesDialog = ref => this.managePublicFilesForm = ref;
 
@@ -80,8 +85,7 @@ export default class Settings extends Component {
 
     	if (response.ok){
     		const themes = await response.json();
-    		this.setState({ themes });
-    		console.log('themes', themes);
+    		this.setState({ themes: themes.map(name => ({ name, remove: this.openDeleteDialog('theme', name) })) });
     		ev.target.reset();
     	}
     	else {
@@ -127,28 +131,37 @@ export default class Settings extends Component {
     };
 
 	save = async () => {
-		const reponse = await Post('/api/settings', this.state.settings);
-		if (reponse.ok) {
+		const response = await Post('/api/settings', this.state.settings);
+		if (response.ok) {
 			Globals.showSnackbar('Settings has been saved');
 		}
 	};
 
 	componentDidMount() {
 		this.load();
-		this.clipboard = new ClipboardJS('.copy');
 	}
 
 	componentWillUnmount() {
-		this.save();
-		this.clipboard.destroy();
+		if (!isEqual(this.initialSettings, this.state.settings)){
+			this.save();
+		}
 	}
 
 	themeChanged = ev => {
 		const selected = this.state.themes[ev.target.selectedIndex - 1];
 		this.setState(s => s.settings.ActiveTheme = selected);
 	};
-	openManageThemeDialog = () => this.uploadThemeDialog.MDComponent.show();
-    openManagePublicFileDialog = () => {
+	openAnalyticsDialog = () => {
+		Get('/api/visits/latest-month')
+			.then(res => res.json())
+			.then(stats => groupBy(stats, 'Page'))
+			.then(stats => orderBy(stats, ['length'], ['desc']))
+			.then(stats => stats.reduce((acc, s) => {acc[s[0].Page] = s; return acc;}, {}))
+			.then(stats => this.setState({ stats }));
+		this.analyticsDialog.MDComponent.show();
+	};
+	openThemeDialog = () => this.uploadThemeDialog.MDComponent.show();
+    openStaticFileDialog = () => {
     	Get('/api/files')
     		.then(res => res.json())
     		.then(this.prepareFiles)
@@ -176,9 +189,10 @@ export default class Settings extends Component {
     		});
     	}
     };
+	findActiveThemeIndex = t => this.state.settings.ActiveTheme === t.name;
 
 
-    onPublicFileToUploadSelected = files => {
+    onStaticFileSelected = files => {
     	this.setState({
     		showUnzipPublicFile: files.findIndex(file => file.name.toLowerCase().endsWith('.zip')) > -1,
     		selectedFiles: files
@@ -202,16 +216,16 @@ export default class Settings extends Component {
     					<Typography style={{ 'margin-right': '10px' }} body1>Use server-side tracking to monitor visits</Typography>
     					<Switch checked={state.settings.UseServerSideTracking} onChange={linkState(this, 'settings.UseServerSideTracking')} />
     				</div>
-    				<Button onClick={this.openViewAnalyticsDialog}>View analytics</Button>
+    				<Button onClick={this.openAnalyticsDialog}>View analytics</Button>
 
     				<Typography headline6>Themes</Typography>
-    				<Select hintText="Blog theme" selectedIndex={state.themes.indexOf(state.settings.ActiveTheme) + 1} onInput={this.themeChanged}>
-    					{state.themes.map(theme => <Select.Item>{theme}</Select.Item>)}
+    				<Select hintText="Blog theme" selectedIndex={state.themes.findIndex(this.findActiveThemeIndex) + 1} onInput={this.themeChanged}>
+    					{state.themes.map(theme => <Select.Item>{theme.name}</Select.Item>)}
     				</Select>
-    				<Button onClick={this.openManageThemeDialog}>Manage blog themes</Button>
+    				<Button onClick={this.openThemeDialog}>Manage blog themes</Button>
 
     				<Typography headline6>Public files</Typography>
-    				<Button onClick={this.openManagePublicFileDialog}>Manage public files</Button>
+    				<Button onClick={this.openStaticFileDialog}>Manage public files</Button>
 
     				<Typography headline6>Change your admin password</Typography>
     				<form onSubmit={this.submitPasswordChange}>
@@ -223,6 +237,30 @@ export default class Settings extends Component {
 
     			</Card>
 
+    			<Dialog ref={this.bindAnalyticsDialog}>
+    				<Dialog.Header>Analytics</Dialog.Header>
+    				<Dialog.Body>
+    					{!state.settings.UseServerSideTracking && (
+    						<div style={{ 'background-color': 'rgba(224,224,224,0.5)', 'padding-left': '2px' }}>
+    							<Typography caption>Server-side tracking is currently disabled</Typography>
+    						</div>
+    					)}
+    					<Typography>Stats for the latest month</Typography>
+    					{console.log(state.stats) || Object.keys(state.stats).map(page => {
+    						const pageStats = state.stats[page];
+    						return (
+    							<ul>
+    								<Typography body2>{page}: {pageStats.length} visits</Typography>
+
+    							</ul>
+    						);
+    					})}
+
+    				</Dialog.Body>
+    				<Dialog.Footer>
+    					<Dialog.FooterButton accept>Done</Dialog.FooterButton>
+    				</Dialog.Footer>
+    			</Dialog>
 
     			<Dialog ref={this.bindManageThemesDialog}>
     				<Dialog.Header>Manage blog themes</Dialog.Header>
@@ -274,7 +312,7 @@ export default class Settings extends Component {
     					<form onSubmit={this.submitStaticFileUpload}>
     						<div>
     							{/*<input name="files" onChange={this.onPublicFileToUploadSelected} type="file" required multiple />*/}
-    							<Upload name="files" selected={state.selectedFiles} onChange={this.onPublicFileToUploadSelected} required multiple />
+    							<Upload name="files" selected={state.selectedFiles} onChange={this.onStaticFileSelected} required multiple />
     						</div>
     						<Button type="submit">Upload</Button>
     						{state.showUnzipPublicFile && (
@@ -298,11 +336,12 @@ export default class Settings extends Component {
     				</Dialog.Body>
     				<Dialog.Footer>
     					<Dialog.FooterButton accept>Yes</Dialog.FooterButton>
-    					<Dialog.FooterButton accept primary>No</Dialog.FooterButton>
+    					<Dialog.FooterButton cancel primary>No</Dialog.FooterButton>
     				</Dialog.Footer>
     			</Dialog>
 
     		</div>
     	);
+
     }
 }

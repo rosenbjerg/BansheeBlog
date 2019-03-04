@@ -27,24 +27,23 @@ export default class Uploader extends Component {
 		e.preventDefault();
 		const selected = e.dataTransfer.files;
 		this.setState({ selected });
-		this.props.onChange(selected);
+		if (this.props.onChange)
+			this.props.onChange(selected);
 	};
 	filesChanged = e => {
 		e.stopPropagation();
 		e.preventDefault();
 		const selected = Array.from(e.target.files);
 		this.setState({ selected });
-		this.props.onChange(selected);
+		if (this.props.onChange)
+			this.props.onChange(selected);
 	};
 	bindFileUpl = ref => this.fileUpl = ref;
 	fileUplClick = () => this.fileUpl.click();
 
-	formatFile = file => {
-		return `${file.name} (${filesize(file.size)})`;
-	};
+	formatFile = file => `${file.name} (${filesize(file.size)})`;
 
 	formatFiles = files => {
-		console.log(files);
 		const all = `${files.length} file${(files.length > 1 ? 's' : '')}: ${files.map(this.formatFile).join(', ')}`;
 		if (all.length > 100)
 			return all.substr(0, 97) + '...';
@@ -52,7 +51,8 @@ export default class Uploader extends Component {
 	};
 
 	componentWillUpdate(nextProps, nextState, nextContext) {
-		nextState.selected = nextProps.selected;
+		if (nextState.selected)
+			nextState.selected = nextProps.selected;
 	}
 
 	render({ selected, onChange, ...props }, state) {
@@ -65,7 +65,7 @@ export default class Uploader extends Component {
 						<Icon>file_upload</Icon>
 					</Fab>
 					<span style={{ 'margin-left': '8px' }}>
-						{state.selected.length ? this.formatFiles(state.selected) : 'Select file'}
+						{(state.selected && state.selected.length > 0) ? this.formatFiles(state.selected) : 'Select file'}
 					</span>
 				</FormField>
 				<input {...props} onChange={this.filesChanged} type="file" ref={this.bindFileUpl} className={style.invis} id={this.id} />
