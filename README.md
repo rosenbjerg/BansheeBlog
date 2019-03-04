@@ -1,19 +1,20 @@
 # BansheeBlog
 #### A simple, personal blogging platform
 
-##### Frameworks used
-- [Handlebars](https://github.com/rexm/Handlebars.Net) templates for server-side rendering of public blog pages
+##### Features
+- Server-side rendering of articles
     - Ensures support for all browsers, even with javascript disabled
-- Markdown for text-formatting of blog posts
+- Markdown for text-formatting of articles
     - [SimpleMDE](https://github.com/sparksuite/simplemde-markdown-editor) as a nice and useful Markdown editor
         - Markdown cheatsheet [here](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
-- [Preact](https://github.com/developit/preact) administration pages
-- [RedHttpServer](https://github.com/rosenbjerg/Red) for backend API server
-    - [SQLite](https://github.com/praeclarum/sqlite-net) embedded database
-    - [BCrypt](https://github.com/neoKushan/BCrypt.Net-Core) protected passwords
-    - [Markdown](https://github.com/Knagis/CommonMark.NET/) rendering
-    
-    
+- Administration webapp built with [Preact](https://github.com/developit/preact)
+- Backend server built with [RedHttpServer](https://github.com/rosenbjerg/Red)
+    - Embedded database using [SQLite](https://github.com/praeclarum/sqlite-net)
+    - Password hashing with [BCrypt](https://github.com/neoKushan/BCrypt.Net-Core)
+    - Server-side rendering using
+      - [Handlebars](https://github.com/rexm/Handlebars.Net)
+      - [CommonMark / Markdown](https://github.com/Knagis/CommonMark.NET/)
+
     
     
     
