@@ -46,7 +46,12 @@ namespace BansheeBlog.Routes
 
         public static Func<Request, Response, Task> Verify()
         {
-            return async (req, res) => await res.SendStatus(HttpStatusCode.OK);
+            return async (req, res) =>
+            {
+                var session = req.GetSession<Session>();
+                await session.Renew(req);
+                await res.SendStatus(HttpStatusCode.OK);
+            };
         }
         
         

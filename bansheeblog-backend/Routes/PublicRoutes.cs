@@ -22,7 +22,7 @@ namespace BansheeBlog.Routes
                 
                 if (settings.UseServerSideTracking)
                 {
-                    tracking.CollectInformation(req, "", db);
+                    tracking.CollectInformation(req, "");
                 }
                 
                 var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
@@ -55,7 +55,7 @@ namespace BansheeBlog.Routes
                 var slug = req.Parameters["slug"];
                 if (settings.UseServerSideTracking)
                 {
-                    tracking.CollectInformation(req, slug, db);
+                    tracking.CollectInformation(req, slug);
                 }
                 var article = await db.FindAsync<Article>(a => a.Public && a.Slug == slug);
                 if (article == null)

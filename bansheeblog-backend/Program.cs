@@ -50,7 +50,8 @@ namespace BansheeBlog
             var settings = Settings.Load(SettingsPath);
 
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
-            var tracking = new Tracking();
+            server.RespondWithExceptionDetails = true;
+            var tracking = new Tracking(config);
 
             server.ConfigureApplication = app =>
             {
@@ -62,7 +63,8 @@ namespace BansheeBlog
             
             // Setup database and tables
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
-            
+
+            await db.DropTableAsync<Visit>();
             await Task.WhenAll(db.CreateTableAsync<Session>(),
                                            db.CreateTableAsync<User>(),
                                            db.CreateTableAsync<Article>(),
@@ -92,7 +94,7 @@ namespace BansheeBlog
 
             // Public routes
             server.Get("/", PublicRoutes.SendFrontpage(settings, tracking, db, config));
-            server.Get("/:slug", PublicRoutes.FindFromSlug(settings, tracking, db, config));
+            server.Get("/article/:slug", PublicRoutes.FindFromSlug(settings, tracking, db, config));
             server.Get("/favicon.ico", PublicRoutes.SendFavicon());
 
 
@@ -114,7 +116,11 @@ namespace BansheeBlog
 
             server.Get("/api/settings", Auth, SettingsRoutes.Fetch(settings));
             server.Post("/api/settings", Auth, SettingsRoutes.Update(settings));
-            
+
+            server.Get("/api/visits/latest-month", Auth, async (req, res) =>
+            {
+                await res.SendJson(await tracking.GetLatest());
+            });
 
             server.Get("/api/files", Auth, StaticFileRoutes.FetchList(config));
             server.Post("/api/file", Auth, StaticFileRoutes.Upload(config));

@@ -10,6 +10,9 @@ namespace BansheeBlog.Models
         public string DatabaseFilePath { get; set; }
         
         [JsonProperty(Required = Required.Always)]
+        public string AnalyticsDatabaseFilePath { get; set; }
+        
+        [JsonProperty(Required = Required.Always)]
         public int Port { get; set; }
         
         [JsonProperty(Required = Required.Always)]
