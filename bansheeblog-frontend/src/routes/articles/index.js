@@ -14,7 +14,6 @@ import 'preact-material-components/Typography/style.css';
 import { Delete, Get, Put } from '../../Fetcher';
 import { route } from 'preact-router';
 import Globals from '../../Globals';
-import TopAppBar from "../../components/header";
 
 export default class Articles extends Component {
 
@@ -81,8 +80,8 @@ export default class Articles extends Component {
 					<div className={style.title} title={article.Title}>
 						<Typography class="truncate" headline6>{article.Title}</Typography>
 					</div>
-					<i>
-						<Typography subtitle2 >{new Date(article.Created).toLocaleString()}</Typography>
+					<i class={style.created}>
+						<Typography subtitle2>{new Date(article.Created).toLocaleString()}</Typography>
 					</i>
 					<span className={style.content}>
 						<Typography body2>

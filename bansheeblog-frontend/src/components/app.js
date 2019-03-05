@@ -11,10 +11,8 @@ import Articles from '../routes/articles';
 import Editor from '../routes/editor';
 import Login from '../routes/login';
 import Settings from '../routes/settings';
-import NotFound from '../routes/404';
+// import NotFound from '../routes/404';
 import { Get } from '../Fetcher';
-// import Articles from 'async!../routes/home';
-// import Profile from 'async!../routes/profile';
 
 export default class App extends Component {
 
@@ -51,15 +49,11 @@ export default class App extends Component {
     		<div id="app">
     			<Header />
     			<Router>
-    				<Login path="/admin/login" />
-
-    				<Articles path="/admin/" />
-    				<Editor path="/admin/editor/:articleId?" />
-    				<Settings path="/admin/settings" />
-
-    				<NotFound default />
+    				<Articles path="/" />
+    				<Login path="/login" />
+    				<Editor path="/editor/:articleId?" />
+    				<Settings path="/settings" />
     			</Router>
-
     			<Snackbar dismissesOnAction ref={this.bindSnackbar} />
     		</div>
     	);

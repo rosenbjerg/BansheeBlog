@@ -1,5 +1,6 @@
 **/data/public/static/
 **/data/database/
+bansheeblog-frontend/build/
 
 database.sqlite
 DotSettings.user

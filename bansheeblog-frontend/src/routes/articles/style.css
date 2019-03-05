@@ -20,21 +20,23 @@
 .grid {
 	display: inline-grid;
 	grid-template-columns: auto 34px;
-	grid-template-rows: 2rem auto;
+	grid-template-rows: 2rem auto auto;
+	grid-template-areas: 'title actions'
+						 'content actions'
+						 'created created';
 }
 
 .actions {
-	grid-column-start: 2;
-	grid-column-end: 3;
-	grid-row-start: 1;
-	grid-row-end: 3;
+	margin: auto;
+	grid-area: actions;
 }
+.created {
+	text-align: center;
+	grid-area: created;
+ }
 
 .title {
-	grid-column-start: 1;
-	grid-column-end: 2;
-	grid-row-start: 1;
-	grid-row-end: 2;
+	grid-area: title;
 
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -46,10 +48,10 @@
 }
 
 .content {
-	grid-column-start: 1;
-	grid-column-end: 2;
-	grid-row-start: 2;
-	grid-row-end: 3;
+	grid-area: content;
+}
+.content p {
+	margin: 0;
 }
 
 .text {
@@ -57,7 +59,7 @@
 	text-overflow: ellipsis;
 	display: -webkit-box;
 	line-height: 1.5rem;     /* fallback */
-	max-height: 4rem;      /* fallback */
-	-webkit-line-clamp: 2;
+	max-height: 5rem;      /* fallback */
+	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
 }

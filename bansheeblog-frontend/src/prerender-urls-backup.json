@@ -1,0 +1,6 @@
+[
+  { "url": "/admin/" },
+  { "url": "/admin/login" },
+  { "url": "/admin/settings" },
+  { "url": "/admin/editor" }
+]

@@ -40,7 +40,8 @@ export default class Settings extends Component {
 		settings: {},
 		themes: [],
 		files: [],
-		stats: {},
+		stats: [],
+		presentedStats: {},
 		currentPassword: '',
 		newPassword1: '',
 		unzipPublicFile: false,
@@ -151,14 +152,12 @@ export default class Settings extends Component {
 		const selected = this.state.themes[ev.target.selectedIndex - 1];
 		this.setState(s => s.settings.ActiveTheme = selected);
 	};
-	openAnalyticsDialog = () => {
-		Get('/api/visits/latest-month')
-			.then(res => res.json())
-			.then(stats => groupBy(stats, 'Page'))
-			.then(stats => orderBy(stats, ['length'], ['desc']))
-			.then(stats => stats.reduce((acc, s) => {acc[s[0].Page] = s; return acc;}, {}))
-			.then(stats => this.setState({ stats }));
+	openAnalyticsDialog = async () => {
+		const statsTask = Get('/api/visits/latest-month').then(res => res.json());
 		this.analyticsDialog.MDComponent.show();
+		const stats = await statsTask;
+		const presentedStats = this.groupAnalyticsStats('Page');
+		this.setState({ stats, presentedStats });
 	};
 	openThemeDialog = () => this.uploadThemeDialog.MDComponent.show();
     openStaticFileDialog = () => {
@@ -191,6 +190,13 @@ export default class Settings extends Component {
     };
 	findActiveThemeIndex = t => this.state.settings.ActiveTheme === t.name;
 
+	changeAnalyticsGrouping = ev => this.setState({ presentedStats: this.groupAnalyticsStats(ev.target.dataset.grouping) });
+	groupAnalyticsStats = prop => {
+		let presentedStats = groupBy([...this.state.stats], prop);
+		presentedStats = orderBy(presentedStats, ['length'], ['desc']);
+		presentedStats = presentedStats.reduce((acc, s) => {acc[s[0][prop]] = s; return acc;}, {});
+		return presentedStats;
+	};
 
     onStaticFileSelected = files => {
     	this.setState({
@@ -245,16 +251,24 @@ export default class Settings extends Component {
     							<Typography caption>Server-side tracking is currently disabled</Typography>
     						</div>
     					)}
-    					<Typography>Stats for the latest month</Typography>
-    					{console.log(state.stats) || Object.keys(state.stats).map(page => {
-    						const pageStats = state.stats[page];
-    						return (
-    							<ul>
-    								<Typography body2>{page}: {pageStats.length} visits</Typography>
-
-    							</ul>
-    						);
-    					})}
+    					<Typography body1>Stats for the latest month</Typography>
+    					<div>
+    						<Typography body2>Group by</Typography>
+    					</div>
+    					<button class={style.groupbutton} data-grouping="Page" onClick={this.changeAnalyticsGrouping}>Visited page</button>
+    					<button class={style.groupbutton} data-grouping="OS" onClick={this.changeAnalyticsGrouping}>Operating System</button>
+    					<button class={style.groupbutton} data-grouping="UserAgent" onClick={this.changeAnalyticsGrouping}>User-agent</button>
+    					<button class={style.groupbutton} data-grouping="Device" onClick={this.changeAnalyticsGrouping}>Device used</button>
+    					<ul>
+    						{Object.keys(state.presentedStats).map(page => {
+    							const pageStats = state.presentedStats[page];
+    							return (
+    								<li>
+    									<Typography body2><b>{page}</b>: {pageStats.length} visits</Typography>
+    								</li>
+    							);
+    						})}
+    					</ul>
 
     				</Dialog.Body>
     				<Dialog.Footer>
