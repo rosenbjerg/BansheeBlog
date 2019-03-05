@@ -19,14 +19,14 @@
     {{> navigation}}
     <main>{{#each Articles}}
             <article>
-                <a class="no-link-style" href="/{{Slug}}">
+                <a class="no-link-style" href="/article/{{Slug}}">
                     <p class="post-title"><b>{{Title}}</b></p>
                 </a>
                 <p class="post-time"><i>{{Created}}</i> ◦</p>
                 <section class="post-content-short">
                     {{{Html}}}
                 </section>
-                <a class="no-link-style post-content-short" href="/post/{{Slug}}">Read full article here →</a>
+                <a class="no-link-style post-content-short" href="/article/{{Slug}}">Read full article here →</a>
             </article>{{~/each}}
     </main>
     {{> footer}}

@@ -11,7 +11,6 @@ namespace BansheeBlog.Utility
     public class Tracking
     {
         private readonly Parser _userAgentParser = Parser.GetDefault();
-        private readonly Configuration _config;
         private readonly SQLiteAsyncConnection _db;
 
         public Task<List<Visit>> GetLatest()
@@ -24,7 +23,6 @@ namespace BansheeBlog.Utility
         
         public Tracking(Configuration config)
         {
-            _config = config;
             _db = new SQLiteAsyncConnection(config.AnalyticsDatabaseFilePath);
             _db.CreateTableAsync<Visit>().Wait();
         }

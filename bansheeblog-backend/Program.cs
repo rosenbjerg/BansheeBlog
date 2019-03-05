@@ -61,6 +61,8 @@ namespace BansheeBlog
                 });
             };
             
+            
+            
             // Setup database and tables
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
 
@@ -79,14 +81,13 @@ namespace BansheeBlog
                 Store = new SQLiteSessionStore(db)
             });
 
+            // Create directories for later use
+            Directory.CreateDirectory(Path.Combine(config.PublicDirectory, "static"));
+            Directory.CreateDirectory(config.TempDirectory);
             
             // Check if first start and create admin user
             CreateFirstUser(db);
             
-            // Create directories for later use
-            Directory.CreateDirectory(Path.Combine(config.PublicDirectory, "static"));
-            Directory.CreateDirectory(config.TempDirectory);
-
             // Initialize partial templates
             var partials = new[] {"header", "footer", "navigation", "meta", "style"};
             FileHandling.RegisterPartialRenderer(partials, config, settings);
@@ -95,7 +96,7 @@ namespace BansheeBlog
             // Public routes
             server.Get("/", PublicRoutes.SendFrontpage(settings, tracking, db, config));
             server.Get("/article/:slug", PublicRoutes.FindFromSlug(settings, tracking, db, config));
-            server.Get("/favicon.ico", PublicRoutes.SendFavicon());
+//            server.Get("/favicon.ico", PublicRoutes.SendFavicon());
 
 
             // Admin routes

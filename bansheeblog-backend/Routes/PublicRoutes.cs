@@ -55,7 +55,7 @@ namespace BansheeBlog.Routes
                 var slug = req.Parameters["slug"];
                 if (settings.UseServerSideTracking)
                 {
-                    tracking.CollectInformation(req, slug);
+                    tracking.CollectInformation(req, "article" + slug);
                 }
                 var article = await db.FindAsync<Article>(a => a.Public && a.Slug == slug);
                 if (article == null)
