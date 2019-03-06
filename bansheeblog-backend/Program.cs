@@ -96,7 +96,7 @@ namespace BansheeBlog
             // Public routes
             server.Get("/", PublicRoutes.SendFrontpage(settings, tracking, db, config));
             server.Get("/article/:slug", PublicRoutes.FindFromSlug(settings, tracking, db, config));
-//            server.Get("/favicon.ico", PublicRoutes.SendFavicon());
+            server.Get("/admin/*", PublicRoutes.SendAdminPWA(config));
 
 
             // Admin routes
@@ -132,9 +132,9 @@ namespace BansheeBlog
             server.Delete("/api/theme", Auth, ThemeRoutes.Remove(config));
 
 
+
             await server.RunAsync("*");
         }
-
 
     }
 }

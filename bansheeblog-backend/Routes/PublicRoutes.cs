@@ -43,9 +43,9 @@ namespace BansheeBlog.Routes
             };
         }
 
-        public static Func<Request, Response, Task> SendFavicon()
+        public static Func<Request, Response, Task> SendAdminPWA(Configuration config)
         {
-            return async (req, res) => await res.SendFile("public/favicon.ico");
+            return async (req, res) => await res.SendFile(Path.Combine(config.PublicDirectory, "admin", "index.html"));
         }
 
         public static Func<Request, Response, Task> FindFromSlug(Settings settings, Tracking tracking, SQLiteAsyncConnection db, Configuration config)
