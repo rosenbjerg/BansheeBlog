@@ -2,6 +2,7 @@ import asyncPlugin from 'preact-cli-plugin-async';
 
 export default (config, env, helpers) => {
 	asyncPlugin(config);
+	config.output.publicPath = '/admin/';
 	config.devServer = {
 		hot: true,
 		quiet: true,

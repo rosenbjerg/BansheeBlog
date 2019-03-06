@@ -18,6 +18,7 @@
 }
 
 .grid {
+	width: 100%;
 	display: inline-grid;
 	grid-template-columns: auto 34px;
 	grid-template-rows: 2rem auto auto;

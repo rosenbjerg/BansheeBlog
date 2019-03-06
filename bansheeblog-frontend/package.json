@@ -36,6 +36,7 @@
     "linkstate": "^1.1.1",
     "lodash": "^4.17.11",
     "preact": "^8.2.1",
+    "preact-async-route": "^2.2.1",
     "preact-compat": "^3.17.0",
     "preact-markup": "^1.6.0",
     "preact-material-components": "^1.4.3",

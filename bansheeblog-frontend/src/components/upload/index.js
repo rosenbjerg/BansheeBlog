@@ -3,11 +3,11 @@ import filesize from 'filesize';
 import style from './style.css';
 
 import FormField from 'preact-material-components/FormField';
-import 'preact-material-components/FormField/style.css';
+// import 'preact-material-components/FormField/style.css';
 import Icon from 'preact-material-components/Icon';
-import 'preact-material-components/Icon/style.css';
+// import 'preact-material-components/Icon/style.css';
 import Fab from 'preact-material-components/Fab';
-import 'preact-material-components/Fab/style.css';
+// import 'preact-material-components/Fab/style.css';
 
 
 export default class Uploader extends Component {

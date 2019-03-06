@@ -19,19 +19,19 @@ import Icon from 'preact-material-components/Icon';
 import Button from 'preact-material-components/Button';
 import TextField from 'preact-material-components/TextField';
 import Switch from 'preact-material-components/Switch';
-import 'preact-material-components/Switch/style.css';
-import 'preact-material-components/Dialog/style.css';
-import 'preact-material-components/Icon/style.css';
-import 'preact-material-components/Typography/style.css';
-import 'preact-material-components/Card/style.css';
-import 'preact-material-components/Button/style.css';
-import 'preact-material-components/TextField/style.css';
+// import 'preact-material-components/Switch/style.css';
+// import 'preact-material-components/Dialog/style.css';
+// import 'preact-material-components/Icon/style.css';
+// import 'preact-material-components/Typography/style.css';
+// import 'preact-material-components/Card/style.css';
+// import 'preact-material-components/Button/style.css';
+// import 'preact-material-components/TextField/style.css';
 
 import Select from 'preact-material-components/Select';
-import 'preact-material-components/List/style.css';
-import 'preact-material-components/Menu/style.css';
-import 'preact-material-components/Select/style.css';
-import 'preact-material-components/FormField/style.css';
+// import 'preact-material-components/List/style.css';
+// import 'preact-material-components/Menu/style.css';
+// import 'preact-material-components/Select/style.css';
+// import 'preact-material-components/FormField/style.css';
 
 
 export default class Settings extends Component {

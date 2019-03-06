@@ -5,11 +5,12 @@ import Dialog from 'preact-material-components/Dialog';
 import Icon from 'preact-material-components/Icon';
 import Typography from 'preact-material-components/Typography';
 import Markup from 'preact-markup';
-import 'preact-material-components/Button/style.css';
-import 'preact-material-components/Card/style.css';
-import 'preact-material-components/Dialog/style.css';
-import 'preact-material-components/Icon/style.css';
-import 'preact-material-components/Typography/style.css';
+// import 'preact-material-components/Button/style.css';
+// import 'preact-material-components/Card/style.css';
+// import 'preact-material-components/Dialog/style.css';
+// import 'preact-material-components/Icon/style.css';
+// import 'preact-material-components/Typography/style.css';
+// import 'preact-material-components/style.css';
 
 import { Delete, Get, Put } from '../../Fetcher';
 import { route } from 'preact-router';

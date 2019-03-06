@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import { route } from 'preact-router';
 import TopAppBar from 'preact-material-components/TopAppBar';
-import 'preact-material-components/TopAppBar/style.css';
+// import 'preact-material-components/TopAppBar/style.css';
 import style from './style.css';
 
 export default class Header extends Component {

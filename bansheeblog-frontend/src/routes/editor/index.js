@@ -4,26 +4,22 @@ import TokenInput from 'preact-token-input';
 import Icon from 'preact-material-components/Icon';
 import TextField from 'preact-material-components/TextField';
 import Typography from 'preact-material-components/Typography';
-import 'preact-material-components/Icon/style.css';
-import 'preact-material-components/TextField/style.css';
-import 'preact-material-components/Typography/style.css';
+// import 'preact-material-components/Icon/style.css';
+// import 'preact-material-components/TextField/style.css';
+// import 'preact-material-components/Typography/style.css';
 import { Get, Put } from '../../Fetcher';
 
 import SimpleMDE from 'simplemde';
 import 'simplemde/dist/simplemde.min.css';
-
-import linkState from 'linkstate';
 import Globals from '../../Globals';
-import TopAppBar from "../../components/header";
 
-const slugify = input =>
-	input.toLowerCase()
-		.replace(/\s+/g, '-')           // Replace spaces with -
-		.replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-		.replace(/\-\-+/g, '-')         // Replace multiple - with single -
-		.replace(/^-+/, '')             // Trim - from start of text
-		.replace(/-+$/, '')            // Trim - from end of text
-;
+const slugify = input => input.toLowerCase()
+	.replace(/\s+/g, '-')
+	.replace(/[^\w-]+/g, '')
+	.replace(/--+/g, '-')
+	.replace(/^-+/, '')
+	.replace(/-+$/, '');
+
 export default class Editor extends Component {
 
 	state = {
@@ -64,7 +60,6 @@ export default class Editor extends Component {
 				public: meta.Public,
 				markdown: markdown.Content
 			}, loadMde);
-			console.log(meta.Id);
 		}
 		else
 			loadMde();
@@ -113,10 +108,8 @@ export default class Editor extends Component {
 
 	setTitle = ev => {
 		const title = ev.target.value;
-		this.setState({
-			slug: slugify(title),
-			title
-		});
+		const slug = slugify(title);
+		this.setState({ title, slug });
 	};
 
 	componentDidMount() {
@@ -128,7 +121,7 @@ export default class Editor extends Component {
 			<div class={style.home}>
 				<div>
 					<Typography headline4>Article editor</Typography>
-					<Icon title="Toggle public" class={state.public ? 'hoverIcon' : 'hoverIcon untoggled'} onClick={this.togglePublic}>public</Icon>
+					<Icon title="Toggle public" class={'hoverIcon' + (state.public ? '' : ' untoggled')} onClick={this.togglePublic}>public</Icon>
 					<Icon class="hoverIcon" title="Save article" onClick={this.save}>save</Icon>
 				</div>
 				<div>
