@@ -28,16 +28,11 @@
     
 ### Upgrading
 - Download the [latest release](https://github.com/rosenbjerg/BansheeBlog/releases)
-- Extract all the files from the root of the `banshee-blog` folder inside the archive into the root of your BansheeBlog installation and overwrite
+- Extract everything except the `data` folder from the root of the `banshee-blog` folder, inside the archive, into the root of your BansheeBlog installation and overwrite
 - Delete all the files in the `admin`-folder in your public root
 - Extract everything from the folder `banshee-blog/data/public/admin`, inside the archive, into the `admin`-folder in your public root
 - Extract the folders from `banshee-blog/data/themes`, inside the archive, into your `themes` folder and overwrite
-
-
-    
-    
-    
-    
+  
     
 ### Contribution
 Feel free to contribute to this project if you feel like it
