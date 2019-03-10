@@ -1,7 +1,8 @@
 # BansheeBlog
 #### A simple, personal blogging platform
 
-##### Features
+### Features
+- Cross-platform (.NET Core)
 - Server-side rendering of articles
     - Ensures support for all browsers, even with javascript disabled
 - Markdown for text-formatting of articles
