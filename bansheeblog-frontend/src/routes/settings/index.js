@@ -3,6 +3,7 @@ import { h, Component } from 'preact';
 import isEqual from 'lodash/isEqual';
 import groupBy from 'lodash/groupBy';
 import orderBy from 'lodash/orderBy';
+import remove from 'lodash/remove';
 import copy from 'clipboard-copy';
 import linkState from 'linkstate';
 import { Delete, Get, Post } from '../../Fetcher';
@@ -12,7 +13,6 @@ import style from './style.css';
 
 import Card from 'preact-material-components/Card';
 import Typography from 'preact-material-components/Typography';
-import FormField from 'preact-material-components/FormField';
 import Dialog from 'preact-material-components/Dialog';
 import Icon from 'preact-material-components/Icon';
 
@@ -46,7 +46,9 @@ export default class Settings extends Component {
 		newPassword1: '',
 		unzipPublicFile: false,
 		showUnzipPublicFile: false,
-		selectedFiles: []
+		selectedFiles: [],
+		newNavigationItemName: '',
+		newNavigationItemUrl: 'https://'
 	};
 
     prepareFiles = files => {
@@ -70,14 +72,15 @@ export default class Settings extends Component {
 		const settings = responses[0];
 		const themes = responses[1].map(name => ({ name, remove: this.openDeleteDialog('theme', name) }));
 
-		this.initialSettings = { ...settings };
 		this.setState({ settings, themes });
+		this.initialSettings = JSON.parse(JSON.stringify(settings));
 	};
 
 	bindDeleteDialog = ref => this.deleteDialog = ref;
 	bindAnalyticsDialog = ref => this.analyticsDialog = ref;
 	bindManageThemesDialog = ref => this.uploadThemeDialog = ref;
     bindManagePublicFilesDialog = ref => this.managePublicFilesForm = ref;
+	bindNavigationDialog = ref => this.manageNavigationForm = ref;
 
     submitThemeUpload = async ev => {
     	ev.preventDefault();
@@ -132,9 +135,12 @@ export default class Settings extends Component {
     };
 
 	save = async () => {
-		const response = await Post('/api/settings', this.state.settings);
-		if (response.ok) {
-			Globals.showSnackbar('Settings has been saved');
+		if (!isEqual(this.initialSettings, this.state.settings)){
+			const response = await Post('/api/settings', this.state.settings);
+			if (response.ok) {
+				Globals.showSnackbar('Settings has been saved');
+				this.initialSettings = JSON.parse(JSON.stringify(this.state.settings));
+			}
 		}
 	};
 
@@ -143,15 +149,14 @@ export default class Settings extends Component {
 	}
 
 	componentWillUnmount() {
-		if (!isEqual(this.initialSettings, this.state.settings)){
-			this.save();
-		}
+		this.save();
 	}
 
 	themeChanged = ev => {
 		const selected = this.state.themes[ev.target.selectedIndex - 1];
 		this.setState(s => s.settings.ActiveTheme = selected);
 	};
+
 	openAnalyticsDialog = async () => {
 		const statsTask = Get('/api/visits/latest-month').then(res => res.json());
 		this.analyticsDialog.MDComponent.show();
@@ -160,6 +165,7 @@ export default class Settings extends Component {
 		this.setState({ stats, presentedStats });
 	};
 	openThemeDialog = () => this.uploadThemeDialog.MDComponent.show();
+	openNavigationDialog = () => this.manageNavigationForm.MDComponent.show();
     openStaticFileDialog = () => {
     	Get('/api/files')
     		.then(res => res.json())
@@ -205,16 +211,36 @@ export default class Settings extends Component {
     	});
     };
 
-    render(props, state) {
+	deleteNavigation = nav => () => {
+		this.setState(s => remove(s.settings.Navigation, n => n === nav));
+	};
+	addNewNavigationItem = () => {
+		const menuItem = {
+			Name: this.state.newNavigationItemName,
+			Href: this.state.newNavigationItemUrl
+		};
+		this.setState(s => {
+			s.newNavigationItemName = '';
+			s.newNavigationItemUrl = 'https://';
+			s.settings.Navigation.push(menuItem);
+		});
+	};
+
+	render(props, state) {
     	return (
     		<div class={style.home}>
     			<Card class={style.card}>
-    				<Typography headline4>Settings</Typography>
+    				<Typography headline4>
+						Settings
+						<Icon class="hoverIcon right" onClick={this.save}>save</Icon>
+    				</Typography>
+					<br />
 
     				<Typography headline6>Blog info</Typography>
     				<TextField className="fullwidth" label="Author" value={state.settings.Author} onChange={linkState(this, 'settings.Author')} />
     				<TextField className="fullwidth" label="Blog title" value={state.settings.BlogTitle} onChange={linkState(this, 'settings.BlogTitle')} />
     				<TextField className="fullwidth" label="Blog description" value={state.settings.BlogDescription} onChange={linkState(this, 'settings.BlogDescription')} />
+					<br />
 
     				<Typography headline6>Analytics</Typography>
     				<TextField className="fullwidth" label="Google Analytics Tracking ID" value={state.settings.GoogleAnalyticsTrackingId} onChange={linkState(this, 'settings.GoogleAnalyticsTrackingId')} />
@@ -223,15 +249,22 @@ export default class Settings extends Component {
     					<Switch checked={state.settings.UseServerSideTracking} onChange={linkState(this, 'settings.UseServerSideTracking')} />
     				</div>
     				<Button onClick={this.openAnalyticsDialog}>View analytics</Button>
+					<br />
 
     				<Typography headline6>Themes</Typography>
     				<Select hintText="Blog theme" selectedIndex={state.themes.findIndex(this.findActiveThemeIndex) + 1} onInput={this.themeChanged}>
     					{state.themes.map(theme => <Select.Item>{theme.name}</Select.Item>)}
     				</Select>
     				<Button onClick={this.openThemeDialog}>Manage blog themes</Button>
+					<br />
 
     				<Typography headline6>Public files</Typography>
     				<Button onClick={this.openStaticFileDialog}>Manage public files</Button>
+					<br />
+
+    				<Typography headline6>Navigation</Typography>
+    				<Button onClick={this.openNavigationDialog}>Manage navigation</Button>
+					<br />
 
     				<Typography headline6>Change your admin password</Typography>
     				<form onSubmit={this.submitPasswordChange}>
@@ -252,24 +285,31 @@ export default class Settings extends Component {
     						</div>
     					)}
     					<Typography body1>Stats for the latest month</Typography>
-    					<div>
-    						<Typography body2>Group by</Typography>
-    					</div>
-    					<button class={style.groupbutton} data-grouping="Page" onClick={this.changeAnalyticsGrouping}>Visited page</button>
-    					<button class={style.groupbutton} data-grouping="OS" onClick={this.changeAnalyticsGrouping}>Operating System</button>
-    					<button class={style.groupbutton} data-grouping="UserAgent" onClick={this.changeAnalyticsGrouping}>User-agent</button>
-    					<button class={style.groupbutton} data-grouping="Device" onClick={this.changeAnalyticsGrouping}>Device used</button>
-    					<ul>
+
+						<div>
+							<Typography body2>Group by</Typography>
+							<button class={style.groupbutton} data-grouping="Page" onClick={this.changeAnalyticsGrouping}>Visited page</button>
+							<button class={style.groupbutton} data-grouping="OS" onClick={this.changeAnalyticsGrouping}>Operating System</button>
+							<button class={style.groupbutton} data-grouping="UserAgent" onClick={this.changeAnalyticsGrouping}>User-agent</button>
+							<button class={style.groupbutton} data-grouping="Device" onClick={this.changeAnalyticsGrouping}>Device used</button>
+						</div>
+
+						<hr />
+    					<table class="fullwidth striped">
     						{Object.keys(state.presentedStats).map(page => {
     							const pageStats = state.presentedStats[page];
     							return (
-    								<li>
-    									<Typography body2><b>{page}</b>: {pageStats.length} visits</Typography>
-    								</li>
+    								<tr key={page}>
+										<td>
+											<Typography body2>{page}</Typography>
+										</td>
+										<td>
+											<Typography body2>{pageStats.length} visits</Typography>
+										</td>
+    								</tr>
     							);
     						})}
-    					</ul>
-
+    					</table>
     				</Dialog.Body>
     				<Dialog.Footer>
     					<Dialog.FooterButton accept>Done</Dialog.FooterButton>
@@ -280,17 +320,21 @@ export default class Settings extends Component {
     				<Dialog.Header>Manage blog themes</Dialog.Header>
     				<Dialog.Body>
     					<Typography>Currently installed themes</Typography>
-    					<ul>
+    					<table class="fullwidth striped">
     						{state.themes.map(theme => (
-    							<li key={theme}>
-    								<FormField>
-    									<Typography headline6>{theme.name}</Typography>
-    									{theme.name !== 'default' && <Icon class="hoverIcon" onClick={theme.remove}>delete_permanently</Icon>}
-    								</FormField>
-    							</li>
+    							<tr key={theme}>
+									<td>
+										<Typography headline6>{theme.name}</Typography>
+									</td>
+									<td>
+										{theme.name !== 'default' && <Icon class="hoverIcon" onClick={theme.remove} title="Delete theme">delete_permanently</Icon>}
+									</td>
+    							</tr>
     						))}
-    					</ul>
-    					<br />
+    					</table>
+						<br />
+    					<hr />
+						<br />
     					<Typography>Upload more themes</Typography>
     					<form onSubmit={this.submitThemeUpload}>
     						<div>
@@ -309,23 +353,25 @@ export default class Settings extends Component {
     				<Dialog.Header>Manage static files</Dialog.Header>
     				<Dialog.Body>
     					<Typography>All files</Typography>
-    					<ul className={style.fileList}>
+    					<table className={style.fileList + ' fullwidth striped'}>
     						{state.files.map(file => (
-    							<li key={file.name} className={style.files}>
-    								<FormField>
-    									<Typography body1>{file.name}</Typography>
-    									<Icon class="hoverIcon" onClick={file.copyLink}>insert_link</Icon>
-    									<Icon class="hoverIcon" onClick={file.remove}>delete_permanently</Icon>
-    								</FormField>
-    							</li>
+    							<tr key={file.name} className={style.files}>
+									<td>
+										<Typography body1>{file.name}</Typography>
+									</td>
+									<td>
+										<Icon class="hoverIcon" onClick={file.copyLink} title="Copy link">insert_link</Icon>
+										<Icon class="hoverIcon" onClick={file.remove} title="Delete file">delete_permanently</Icon>
+									</td>
+    							</tr>
     						))}
-    					</ul>
-
-    					<br />
+    					</table>
+						<br />
+    					<hr />
+						<br />
     					<Typography>Upload more files</Typography>
     					<form onSubmit={this.submitStaticFileUpload}>
     						<div>
-    							{/*<input name="files" onChange={this.onPublicFileToUploadSelected} type="file" required multiple />*/}
     							<Upload name="files" selected={state.selectedFiles} onChange={this.onStaticFileSelected} required multiple />
     						</div>
     						<Button type="submit">Upload</Button>
@@ -336,6 +382,53 @@ export default class Settings extends Component {
     							</div>
     						)}
     					</form>
+    				</Dialog.Body>
+    				<Dialog.Footer>
+    					<Dialog.FooterButton accept>Done</Dialog.FooterButton>
+    				</Dialog.Footer>
+    			</Dialog>
+
+
+    			<Dialog ref={this.bindNavigationDialog}>
+    				<Dialog.Header>Navigation</Dialog.Header>
+    				<Dialog.Body>
+    					<Typography body1>Current menu navigation items</Typography>
+    					<table class="fullwidth striped">
+    						{(state.settings.Navigation || []).map(nav => (
+    							<tr key={nav.Name}>
+									<td>
+										<Typography body2>{nav.Name}</Typography>
+									</td>
+									<td>
+										<a href={nav.Href}>{nav.Href}</a>
+									</td>
+									<td>
+										<Icon class="hoverIcon" onClick={this.deleteNavigation(nav)}>close</Icon>
+									</td>
+    							</tr>
+    						))}
+    					</table>
+						<br />
+						<hr />
+						<br />
+						<table class="fullwidth">
+							<tr>
+								<td colSpan={3}>
+									<Typography body1>Add menu item</Typography>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<TextField class="fullwidth" value={state.newNavigationItemName} onChange={linkState(this, 'newNavigationItemName')} label="Name" />
+								</td>
+								<td>
+									<TextField class="fullwidth" value={state.newNavigationItemUrl} onChange={linkState(this, 'newNavigationItemUrl')} label="Link" />
+								</td>
+								<td>
+									<Icon class="hoverIcon" onClick={this.addNewNavigationItem}>add</Icon>
+								</td>
+							</tr>
+						</table>
     				</Dialog.Body>
     				<Dialog.Footer>
     					<Dialog.FooterButton accept>Done</Dialog.FooterButton>
@@ -356,6 +449,5 @@ export default class Settings extends Component {
 
     		</div>
     	);
-
-    }
+	}
 }

@@ -2,6 +2,7 @@
     --mdc-theme-primary: #212121;
     --font-color: #212121;
     --mdc-theme-background: #FAFAFA;
+    --mdc-text-field-bgc: #FBFBFB;
 }
 
 html, body {
@@ -67,7 +68,6 @@ html, body {
 	height: 100%;
 }
 
-
 .hoverIcon {
     cursor: pointer;
     margin-left: 4px;
@@ -95,6 +95,14 @@ html, body {
     opacity: 0.3;
 }
 
+.right {
+    float: right;
+}
+
+.mdc-text-field:not(.mdc-text-field--disabled) {
+    background-color: var(--mdc-text-field-bgc);
+}
+
 .token-input .tags-input{
     padding-top: 4px;
     color: rgba(0, 0, 0, 0.87);
@@ -108,4 +116,14 @@ html, body {
 }
 .mdc-snackbar {
     z-index: 1000;
+}
+
+.striped {
+    border-collapse: collapse;
+}
+.striped tr:nth-child(even) {
+    background-color: #F6F6F6;
+}
+.striped tr td:last-child {
+    float: right;
 }

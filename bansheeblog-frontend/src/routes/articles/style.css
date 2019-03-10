@@ -10,9 +10,9 @@
 
 .card {
 	padding: 8px;
-	max-width: calc(25% - 16px);
+	max-width: calc(20% - 16px);
 	width: calc(100% - 16px);
-	min-width: 350px;
+	min-width: 280px;
 	margin: 8px;
 	display: inline-block !important;
 }

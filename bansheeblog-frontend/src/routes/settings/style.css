@@ -26,6 +26,10 @@
 .groupbutton {
 	border: 1px;
 	border-radius: 2px;
-	text-decoration: underline;
 	background-color: transparent;
+	cursor: pointer;
+}
+.groupbutton:focus {
+	outline: none;
+	text-decoration: underline;
 }
