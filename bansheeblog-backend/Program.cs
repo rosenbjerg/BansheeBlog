@@ -118,10 +118,7 @@ namespace BansheeBlog
             server.Get("/api/settings", Auth, SettingsRoutes.Fetch(settings));
             server.Post("/api/settings", Auth, SettingsRoutes.Update(settings));
 
-            server.Get("/api/visits/latest-month", Auth, async (req, res) =>
-            {
-                await res.SendJson(await tracking.GetLatest());
-            });
+            server.Get("/api/visits/latest-month", Auth, AnalyticsRoutes.FetchLatest30Days(tracking));
 
             server.Get("/api/files", Auth, StaticFileRoutes.FetchList(config));
             server.Post("/api/file", Auth, StaticFileRoutes.Upload(config));
@@ -135,6 +132,5 @@ namespace BansheeBlog
 
             await server.RunAsync("*");
         }
-
     }
 }
