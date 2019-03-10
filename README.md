@@ -5,12 +5,12 @@
 - Cross-platform (.NET Core)
 - Server-side rendering of articles
     - Ensures support for all browsers, even with javascript disabled
+- Server-side analytics to collect basic information about the visits to the blog
 - Markdown for text-formatting of articles
     - [SimpleMDE](https://github.com/sparksuite/simplemde-markdown-editor) as a nice and useful Markdown editor
         - Markdown cheatsheet [here](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 - Administration webapp built with [Preact](https://github.com/developit/preact)
 - Backend server built with [RedHttpServer](https://github.com/rosenbjerg/Red)
-    - Server-side analytics to collect basic information about the visits to the blog
     - Embedded database using [SQLite](https://github.com/praeclarum/sqlite-net)
     - Password hashing with [BCrypt](https://github.com/neoKushan/BCrypt.Net-Core)
     - Server-side rendering using
