@@ -29,6 +29,7 @@ namespace BansheeBlog.Routes
                 settings.BlogDescription = newSettings.BlogDescription;
                 settings.GoogleAnalyticsTrackingId = newSettings.GoogleAnalyticsTrackingId;
                 settings.UseServerSideTracking = newSettings.UseServerSideTracking;
+                settings.Navigation = newSettings.Navigation;
                 
                 File.WriteAllText(Program.SettingsPath, JsonConvert.SerializeObject(settings));
                 await res.SendStatus(HttpStatusCode.OK);
