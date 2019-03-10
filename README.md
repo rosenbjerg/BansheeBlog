@@ -10,6 +10,7 @@
         - Markdown cheatsheet [here](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 - Administration webapp built with [Preact](https://github.com/developit/preact)
 - Backend server built with [RedHttpServer](https://github.com/rosenbjerg/Red)
+    - Server-side analytics to collect basic information about the visits to the blog
     - Embedded database using [SQLite](https://github.com/praeclarum/sqlite-net)
     - Password hashing with [BCrypt](https://github.com/neoKushan/BCrypt.Net-Core)
     - Server-side rendering using
