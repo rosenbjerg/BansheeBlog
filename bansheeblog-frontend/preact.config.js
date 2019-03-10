@@ -2,7 +2,7 @@ import asyncPlugin from 'preact-cli-plugin-async';
 
 export default (config, env, helpers) => {
 	asyncPlugin(config);
-	config.output.publicPath = '/admin/';
+	config.output.publicPath = '/';
 	config.devServer = {
 		hot: true,
 		quiet: true,
@@ -13,7 +13,6 @@ export default (config, env, helpers) => {
 			{
 				path: '/api/**',
 				target: 'http://localhost:5420'
-				// ...any other stuff...
 			}
 		]
 	};
