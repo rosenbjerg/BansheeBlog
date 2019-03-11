@@ -15,6 +15,12 @@ namespace BansheeBlog
 {
     class Program
     {
+#if DEBUG
+        public const bool DEV = true;
+#else
+        public const bool DEV = false;
+#endif
+        
         private static async void CreateFirstUser(SQLiteAsyncConnection db)
         {
             if (await db.Table<User>().FirstOrDefaultAsync() == null)
@@ -50,7 +56,7 @@ namespace BansheeBlog
             var settings = Settings.Load(SettingsPath);
 
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
-            server.RespondWithExceptionDetails = true;
+            server.RespondWithExceptionDetails = DEV;
             var tracking = new Tracking(config);
 
             server.ConfigureApplication = app =>
@@ -77,7 +83,7 @@ namespace BansheeBlog
             // Cookie session authentication
             server.Use(new CookieSessions<Session>(TimeSpan.FromDays(14))
             {
-                Secure = false,
+                Secure = !DEV,
                 Store = new SQLiteSessionStore(db)
             });
 
