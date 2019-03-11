@@ -1,7 +1,7 @@
-# BansheeBlog
-#### A simple, personal blogging platform
+### _A simple personal blogging platform - self-hosted, of course_
+BansheeBlog is a simple but useful blogging platform that is perfect for running a personal blog, where you can post articles and upload images and other files to share with your readers
 
-### Features
+## Features
 - Cross-platform (.NET Core)
 - Server-side rendering of articles
     - Ensures support for all browsers, even with javascript disabled
@@ -17,7 +17,7 @@
       - [Handlebars](https://github.com/rexm/Handlebars.Net)
       - [CommonMark / Markdown](https://github.com/Knagis/CommonMark.NET/)
 
-### Installation
+## Installation
 - Download the [latest release](https://github.com/rosenbjerg/BansheeBlog/releases)
 - Extract to where you want the server to be
 - Navigate inside the extracted folder in a terminal
@@ -33,6 +33,4 @@
 - Extract everything from the folder `banshee-blog/data/public/admin`, inside the archive, into the `admin`-folder in your public root
 - Extract the folders from `banshee-blog/data/themes`, inside the archive, into your `themes` folder and overwrite
   
-    
-### Contribution
-Feel free to contribute to this project if you feel like it
+
