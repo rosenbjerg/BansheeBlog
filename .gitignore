@@ -2,6 +2,8 @@
 **/data/public/admin/
 **/data/database/
 bansheeblog-frontend/build/
+test/
+release-updater/
 
 database.sqlite
 DotSettings.user
