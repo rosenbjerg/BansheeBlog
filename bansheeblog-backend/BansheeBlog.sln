@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BansheeBlog", "BansheeBlog.csproj", "{0D84389F-4A87-44E7-B25A-0F2E2B89ED37}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BansheeBlog", "BansheeBlog\BansheeBlog.csproj", "{0D84389F-4A87-44E7-B25A-0F2E2B89ED37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UpdateBansheeBlog", "UpdateBansheeBlog\UpdateBansheeBlog.csproj", "{107C47EA-E6EA-412C-9D67-B67970C5167C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +14,9 @@ Global
 		{0D84389F-4A87-44E7-B25A-0F2E2B89ED37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D84389F-4A87-44E7-B25A-0F2E2B89ED37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D84389F-4A87-44E7-B25A-0F2E2B89ED37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{107C47EA-E6EA-412C-9D67-B67970C5167C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{107C47EA-E6EA-412C-9D67-B67970C5167C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{107C47EA-E6EA-412C-9D67-B67970C5167C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{107C47EA-E6EA-412C-9D67-B67970C5167C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

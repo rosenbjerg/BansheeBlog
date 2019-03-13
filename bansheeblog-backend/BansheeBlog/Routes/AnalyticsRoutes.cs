@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
 using BansheeBlog.Utility;
@@ -35,6 +36,7 @@ namespace BansheeBlog.Routes
         
         public Tracking(Configuration config)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(config.AnalyticsDatabaseFilePath));
             _db = new SQLiteAsyncConnection(config.AnalyticsDatabaseFilePath);
             _db.CreateTableAsync<Visit>().Wait();
         }

@@ -31,7 +31,7 @@ namespace BansheeBlog.Models
             if (!File.Exists(filepath))
             {
                 config = new Configuration();
-                File.WriteAllText(filepath, JsonConvert.SerializeObject(config));
+                File.WriteAllText(filepath, JsonConvert.SerializeObject(config, Formatting.Indented));
                 Console.WriteLine("Default configuration created\nEdit it and restart the server if needed");
             }
             else

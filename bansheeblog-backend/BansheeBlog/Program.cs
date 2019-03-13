@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
 using BansheeBlog.Routes;
@@ -15,6 +17,7 @@ namespace BansheeBlog
 {
     class Program
     {
+        public const string Version = "1.1.0";
 #if DEBUG
         public const bool DEV = true;
 #else
@@ -55,6 +58,8 @@ namespace BansheeBlog
             var config = Configuration.Load(ConfigPath);
             var settings = Settings.Load(SettingsPath);
 
+            var updates = await Updater.Updater.CheckForUpdates();
+            
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
             server.RespondWithExceptionDetails = DEV;
             var tracking = new Tracking(config);
@@ -70,9 +75,8 @@ namespace BansheeBlog
             
             
             // Setup database and tables
+            Directory.CreateDirectory(Path.GetDirectoryName(config.AnalyticsDatabaseFilePath));
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
-
-            await db.DropTableAsync<Visit>();
             await Task.WhenAll(db.CreateTableAsync<Session>(),
                                            db.CreateTableAsync<User>(),
                                            db.CreateTableAsync<Article>(),
@@ -135,7 +139,7 @@ namespace BansheeBlog
             server.Delete("/api/theme", Auth, ThemeRoutes.Remove(config));
 
 
-
+            Console.WriteLine($"\nStarting BansheeBlog v. {Version}...");
             await server.RunAsync("*");
         }
     }

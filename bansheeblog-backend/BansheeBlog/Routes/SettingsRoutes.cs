@@ -31,7 +31,7 @@ namespace BansheeBlog.Routes
                 settings.UseServerSideTracking = newSettings.UseServerSideTracking;
                 settings.Navigation = newSettings.Navigation;
                 
-                File.WriteAllText(Program.SettingsPath, JsonConvert.SerializeObject(settings));
+                File.WriteAllText(Program.SettingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
                 await res.SendStatus(HttpStatusCode.OK);
             };
         }

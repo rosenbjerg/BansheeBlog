@@ -4,7 +4,7 @@
 ### Features
 - Cross-platform (.NET Core)
 - Server-side rendering of articles
-    - Ensures support for all browsers, even with javascript disabled
+    - Ensures support for all browsers, even with JavaScript disabled
 - Server-side analytics to collect basic information about the visits to the blog
 - Markdown for text-formatting of articles
     - [SimpleMDE](https://github.com/sparksuite/simplemde-markdown-editor) as a nice and useful Markdown editor
@@ -16,6 +16,7 @@
     - Server-side rendering using
       - [Handlebars](https://github.com/rexm/Handlebars.Net)
       - [CommonMark / Markdown](https://github.com/Knagis/CommonMark.NET/)
+- Automatically install updates
 
 ### Installation
 - Download the [latest release](https://github.com/rosenbjerg/BansheeBlog/releases)
@@ -26,7 +27,7 @@
   - A configuration file named `config.json` is created on first start
     - If you need to change it, you must (re)start the server after saving the changed configuration
     
-### Upgrading
+### Manuel upgrading
 - Download the [latest release](https://github.com/rosenbjerg/BansheeBlog/releases)
 - Extract everything except the `data` folder from the root of the `banshee-blog` folder, inside the archive, into the root of your BansheeBlog installation and overwrite
 - Delete all the files in the `admin`-folder in your public root
