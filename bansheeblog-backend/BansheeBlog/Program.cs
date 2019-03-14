@@ -6,59 +6,33 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
 using BansheeBlog.Routes;
+using BansheeBlog.Updating;
 using BansheeBlog.Utility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Red;
 using Red.CookieSessions;
 using SQLite;
+using UpdateBansheeBlog;
 
 namespace BansheeBlog
 {
     class Program
     {
-        public const string Version = "1.1.0";
 #if DEBUG
         public const bool DEV = true;
 #else
         public const bool DEV = false;
 #endif
         
-        private static async void CreateFirstUser(SQLiteAsyncConnection db)
-        {
-            if (await db.Table<User>().FirstOrDefaultAsync() == null)
-            {
-                var password = Guid.NewGuid().ToString("N");
-                var admin = new User
-                {
-                    Username = "admin",
-                    Password = BCrypt.Net.BCrypt.HashPassword(password, 12)
-                };
-                await db.InsertAsync(admin);
-
-                var print = $"username: {admin.Username}\npassword: {password}";
-                await File.WriteAllTextAsync("./credentials.txt", print);
-                Console.WriteLine("Credentials saved in 'credentials.txt'");
-            }
-        }
-
+        public const string Version = "1.2.0";
         public const string ConfigPath = "config.json";
         public const string SettingsPath = "settings.json";
-        
-        private static async Task Auth(Request req, Response res)
-        {
-            if (req.GetSession<Session>() == null)
-            {
-                await res.SendStatus(HttpStatusCode.Unauthorized);
-            }
-        }
         
         static async Task Main(string[] args)
         {
             var config = Configuration.Load(ConfigPath);
             var settings = Settings.Load(SettingsPath);
-
-            var updates = await Updater.Updater.CheckForUpdates();
             
             var server = new RedHttpServer(config.Port, config.PublicDirectory);
             server.RespondWithExceptionDetails = DEV;
@@ -129,7 +103,7 @@ namespace BansheeBlog
             server.Post("/api/settings", Auth, SettingsRoutes.Update(settings));
 
             server.Get("/api/visits/latest-month", Auth, AnalyticsRoutes.FetchLatest30Days(tracking));
-
+            
             server.Get("/api/files", Auth, StaticFileRoutes.FetchList(config));
             server.Post("/api/file", Auth, StaticFileRoutes.Upload(config));
             server.Delete("/api/file", Auth, StaticFileRoutes.Remove(config));
@@ -138,9 +112,39 @@ namespace BansheeBlog
             server.Post("/api/theme", Auth, ThemeRoutes.Upload(config));
             server.Delete("/api/theme", Auth, ThemeRoutes.Remove(config));
 
+            server.Get("/api/update", Auth, UpdatingRoutes.FetchAvailability());
+            server.Post("/api/update", Auth, UpdatingRoutes.InitiateUpdate(config));
+
 
             Console.WriteLine($"\nStarting BansheeBlog v. {Version}...");
             await server.RunAsync("*");
+        }
+        
+        
+        private static async void CreateFirstUser(SQLiteAsyncConnection db)
+        {
+            if (await db.Table<User>().FirstOrDefaultAsync() == null)
+            {
+                var password = Guid.NewGuid().ToString("N");
+                var admin = new User
+                {
+                    Username = "admin",
+                    Password = BCrypt.Net.BCrypt.HashPassword(password, 12)
+                };
+                await db.InsertAsync(admin);
+
+                var print = $"username: {admin.Username}\npassword: {password}";
+                await File.WriteAllTextAsync("./credentials.txt", print);
+                Console.WriteLine("Credentials saved in 'credentials.txt'");
+            }
+        }
+
+        private static async Task Auth(Request req, Response res)
+        {
+            if (req.GetSession<Session>() == null)
+            {
+                await res.SendStatus(HttpStatusCode.Unauthorized);
+            }
         }
     }
 }
