@@ -7,7 +7,7 @@ namespace UpdateBansheeBlog
         [Command("--check", Description = "Check for updates")]
         public string Check { get; set; }
         
-        [Command("--install", Description = "Check for updates and install updates if available")]
+        [Command("--install", Description = "Check for updates and install them if available")]
         public InstallArguments Install { get; set; }
         
         [Command("--wait-install", Description = "Wait for the server to exit, check for and install updates, then restart server (used by BansheeBlog backend)")]

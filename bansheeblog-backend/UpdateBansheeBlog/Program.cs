@@ -15,7 +15,7 @@ namespace UpdateBansheeBlog
         private const string WaitInstallCommand = " --wait-install";
         private const string CheckCommand = " --check";
 
-        private static readonly string[] UpdaterFiles = {"UpdateBansheeBlog.dll", "UpdateBansheeBlog.runtimeconfig.json", "Newtonsoft.Json.dll"};
+        private static readonly string[] UpdaterFiles = {"UpdateBansheeBlog.dll", "UpdateBansheeBlog.runtimeconfig.json", "Newtonsoft.Json.dll", "Commander.NET.dll"};
         
         static async Task Main(string[] args)
         {
@@ -102,7 +102,7 @@ namespace UpdateBansheeBlog
             {
                 File.Delete(Path.Combine(backendDir, "BansheeBlog.dll"));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 await AwaitServerShutdown(backendDir);
             }

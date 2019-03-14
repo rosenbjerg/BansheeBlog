@@ -59,15 +59,12 @@ namespace UpdateBansheeBlog
                 var startInfo = new ProcessStartInfo("dotnet")
                 {
                     WorkingDirectory = backendDir,
-                    Arguments = $"UpdateBansheeBlog.dll --wait-install \"{unzipDir}\" \"{backendDir}\" \"{publicDir}\""
+                    Arguments = $"UpdateBansheeBlog.dll --wait-install --update-dir \"{unzipDir}\" --backend-dir \"{backendDir}\" --public-dir \"{publicDir}\""
                 };
                 Process.Start(startInfo);
                 return true;
             }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         private static async Task<string> DownloadAndExtractUpdate(string tempDir, GitHubAsset updateAsset)
@@ -102,7 +99,7 @@ namespace UpdateBansheeBlog
             public string Version;
             public string Message;
             public string Url;
-            public DateTime Released { get; set; }
+            public DateTime Released;
         }
     }
 }

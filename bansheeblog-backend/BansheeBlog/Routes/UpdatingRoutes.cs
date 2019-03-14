@@ -26,9 +26,13 @@ namespace BansheeBlog.Routes
             return async (req, res) =>
             {
                 var backendDir = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-                await Updater.InstallUpdates(backendDir, config.PublicDirectory, config.TempDirectory);
-                await res.SendStatus(HttpStatusCode.OK);
-                Environment.Exit(0);
+                var willUpdate = await Updater.InstallUpdates(backendDir, config.PublicDirectory, config.TempDirectory);
+                await res.SendString(willUpdate ? "Installing updates... Server will restart soon" : "Server is fully updated!");
+                
+                if (willUpdate)
+                {
+                    Environment.Exit(0);
+                }
             };
         }
     }

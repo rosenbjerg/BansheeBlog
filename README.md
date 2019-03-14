@@ -8,22 +8,24 @@
 - Server-side analytics to collect basic information about the visits to the blog
 - Markdown for text-formatting of articles
     - [SimpleMDE](https://github.com/sparksuite/simplemde-markdown-editor) as a nice and useful Markdown editor
-        - Markdown cheatsheet [here](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
+        - Markdown cheat-sheet [here](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 - Administration webapp built with [Preact](https://github.com/developit/preact)
-- Backend server built with [RedHttpServer](https://github.com/rosenbjerg/Red)
+- ASP.NET-based backend server built with [RedHttpServer](https://github.com/rosenbjerg/Red)
     - Embedded database using [SQLite](https://github.com/praeclarum/sqlite-net)
     - Password hashing with [BCrypt](https://github.com/neoKushan/BCrypt.Net-Core)
     - Server-side rendering using
       - [Handlebars](https://github.com/rexm/Handlebars.Net)
       - [CommonMark / Markdown](https://github.com/Knagis/CommonMark.NET/)
-- Automatically install updates
+- Automatically install updates through the admin interface
+
 
 ### Installation
+- Make sure the `dotnet` version `2.2` or newer is installed
 - Download the [latest release](https://github.com/rosenbjerg/BansheeBlog/releases)
-- Extract to where you want the server to be
-- Navigate inside the extracted folder in a terminal
-- Run `dotnet BansheeBlog.dll` to start the server
-  - A file named `credentials.txt`, containing inital admin credentials, will be created in the root folder on first start
+- Extract the content of the zip-file to the location you want the server installed
+- Navigate inside the `banshee-blog` folder you just extracted in a terminal
+- Start the server by running `dotnet BansheeBlog.dll`
+  - A file named `credentials.txt`, containing initial admin credentials, will be created in the root folder on first start
   - A configuration file named `config.json` is created on first start
     - If you need to change it, you must (re)start the server after saving the changed configuration
     
