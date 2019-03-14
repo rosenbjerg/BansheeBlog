@@ -1,6 +1,6 @@
-namespace BansheeBlog.Updater
+namespace BansheeBlog.Updating
 {
-    internal class Author
+    internal class GitHubAuthor
     {
         public string login { get; set; }
         public int id { get; set; }

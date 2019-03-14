@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace BansheeBlog.Updater
+namespace BansheeBlog.Updating
 {
-    internal class ReleaseInfo
+    internal class GitHubReleaseInfo
     {
         public string url { get; set; }
         public string assets_url { get; set; }
@@ -15,11 +15,11 @@ namespace BansheeBlog.Updater
         public string target_commitish { get; set; }
         public string name { get; set; }
         public bool draft { get; set; }
-        public Author author { get; set; }
+        public GitHubAuthor author { get; set; }
         public bool prerelease { get; set; }
         public DateTime created_at { get; set; }
         public DateTime published_at { get; set; }
-        public List<Asset> assets { get; set; }
+        public List<GitHubAsset> assets { get; set; }
         public string tarball_url { get; set; }
         public string zipball_url { get; set; }
         public string body { get; set; }

@@ -1,15 +1,15 @@
 using System;
 
-namespace BansheeBlog.Updater
+namespace BansheeBlog.Updating
 {
-    internal class Asset
+    internal class GitHubAsset
     {
         public string url { get; set; }
         public int id { get; set; }
         public string node_id { get; set; }
         public string name { get; set; }
         public object label { get; set; }
-        public Uploader uploader { get; set; }
+        public GitHubUploader uploader { get; set; }
         public string content_type { get; set; }
         public string state { get; set; }
         public int size { get; set; }
