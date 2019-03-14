@@ -14,9 +14,10 @@ namespace UpdateBansheeBlog
     {
         private const string GithubReleaseInfoUrl =
             "https://api.github.com/repos/rosenbjerg/BansheeBlog/releases/latest";
-
+        
         private const string UserAgentValue = "BansheeBlogUpdater";
 
+        
         private static async Task<GitHubReleaseInfo> GetLatestReleaseInfo()
         {
             using (var httpClient = new HttpClient
@@ -29,6 +30,32 @@ namespace UpdateBansheeBlog
                 return JsonConvert.DeserializeObject<GitHubReleaseInfo>(content);
             }
         }
+        private static async Task<string> DownloadAndExtractUpdate(string tempDir, GitHubAsset updateAsset)
+        {
+            var saveLocation = Path.Combine(tempDir, updateAsset.name);
+            if (!File.Exists(saveLocation))
+            {
+                using (var httpClient = new HttpClient
+                {
+                    DefaultRequestHeaders = {{"User-Agent", UserAgentValue}}
+                })
+                {
+                    var response = await httpClient.GetAsync(updateAsset.browser_download_url);
+                    using (var outputStream = File.Create(saveLocation))
+                    using (var inputStream = await response.Content.ReadAsStreamAsync())
+                    {
+                        await inputStream.CopyToAsync(outputStream);
+                    }
+                }
+            }
+
+            var unzipDir = Path.Combine(tempDir, Path.GetFileNameWithoutExtension(updateAsset.name));
+
+            Directory.CreateDirectory(unzipDir);
+            await Task.Run(() => ZipFile.ExtractToDirectory(saveLocation, unzipDir, true));
+            return unzipDir;
+        }
+        
         
         public static async Task<UpdatesAvailableStatus> CheckForUpdates(string currentVersion)
         {
@@ -66,40 +93,13 @@ namespace UpdateBansheeBlog
             }
             return false;
         }
-
-        private static async Task<string> DownloadAndExtractUpdate(string tempDir, GitHubAsset updateAsset)
-        {
-            var saveLocation = Path.Combine(tempDir, updateAsset.name);
-            if (!File.Exists(saveLocation))
-            {
-                using (var httpClient = new HttpClient
-                {
-                    DefaultRequestHeaders = {{"User-Agent", UserAgentValue}}
-                })
-                {
-                    var response = await httpClient.GetAsync(updateAsset.browser_download_url);
-                    using (var outputStream = File.Create(saveLocation))
-                    using (var inputStream = await response.Content.ReadAsStreamAsync())
-                    {
-                        await inputStream.CopyToAsync(outputStream);
-                    }
-                }
-            }
-
-            var unzipDir = Path.Combine(tempDir, Path.GetFileNameWithoutExtension(updateAsset.name));
-
-            Directory.CreateDirectory(unzipDir);
-            await Task.Run(() => ZipFile.ExtractToDirectory(saveLocation, unzipDir, true));
-            return unzipDir;
-        }
-
-        public class UpdatesAvailableStatus
-        {
-            public bool Available;
-            public string Version;
-            public string Message;
-            public string Url;
-            public DateTime Released;
-        }
+    }
+    public class UpdatesAvailableStatus
+    {
+        public bool Available;
+        public string Version;
+        public string Message;
+        public string Url;
+        public DateTime Released;
     }
 }

@@ -1,10 +1,8 @@
 using System;
 using System.IO;
-using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
-using BansheeBlog.Updating;
 using Red;
 using UpdateBansheeBlog;
 

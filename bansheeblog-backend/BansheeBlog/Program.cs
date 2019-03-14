@@ -1,19 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
 using BansheeBlog.Routes;
-using BansheeBlog.Updating;
 using BansheeBlog.Utility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Red;
 using Red.CookieSessions;
 using SQLite;
-using UpdateBansheeBlog;
 
 namespace BansheeBlog
 {

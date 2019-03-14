@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
-using BansheeBlog.Utility;
 using Red;
 using SQLite;
 using UAParser;
