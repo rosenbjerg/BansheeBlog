@@ -1,57 +1,97 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Commander.NET;
 
 namespace UpdateBansheeBlog
 {
     class Program
     {
+        private const string InstallCommand = " --install";
+        private const string WaitInstallCommand = " --wait-install";
+        private const string CheckCommand = " --check";
+
+        private static readonly string[] UpdaterFiles = {"UpdateBansheeBlog.dll", "UpdateBansheeBlog.runtimeconfig.json", "Newtonsoft.Json.dll"};
+        
         static async Task Main(string[] args)
         {
             Console.WriteLine("BansheeBlog updater\n");
-            if (args.Length != 3)
-            {
-                Console.WriteLine("Invalid arguments. This application is not for manual use");
-                return;
-            }
+            var parser = new CommanderParser<CommandLineArgs>();
+            Console.WriteLine(parser.Usage());
 
-            var updateDir = args[0];
-            var backendDir = args[1];
-            var publicDir = args[2];
-
-            if (!Directory.Exists(updateDir) || !Directory.Exists(backendDir) || !Directory.Exists(publicDir))
-            {
-                Console.WriteLine("One or more of the required directories does not exist");
-                return;
-            }
-
-            Console.WriteLine("Waiting for BansheeBlog to exit...");
-            await AwaitServerShutdown(backendDir);
-            
+            CommandLineArgs parsedArgs;
             try
             {
-                Console.WriteLine("Deleting backend server files");
-                DeleteBackendServerFiles(backendDir);
-                Console.WriteLine("Deleting admin frontend files");
-                DeleteAdminFrontendFiles(publicDir);
-                Console.WriteLine("Installing updated backend server files");
-                MoveBackendServerFiles(updateDir, backendDir);
-                Console.WriteLine("Installing updated admin frontend files");
-                MoveAdminFrontendFiles(updateDir, publicDir);
-                Console.WriteLine("Cleaning up after update");
-                Cleanup(updateDir);
-                Console.WriteLine("Starting BansheeBlog");
-                StartServer(backendDir);
-                
-                Console.WriteLine("\nDone! This updater closes in 3 seconds, bye :)");
-                await Task.Delay(3000);
+                parsedArgs = parser.Parse();
             }
             catch (Exception e)
             {
-                Console.WriteLine("Blast!");
                 Console.WriteLine(e.Message);
+                return;
+            }
+
+            if (parsedArgs.Check != null)
+            {
+                Console.WriteLine("Check is not yet supported");
+            }
+            else if (parsedArgs.Install != null || parsedArgs.WaitAndInstall != null)
+            {
+                var wait = parsedArgs.WaitAndInstall != null;
+                var installArgs = wait ? parsedArgs.WaitAndInstall : parsedArgs.Install;
+               
+                var updateDir = installArgs.UpdateDirectory;
+                var backendDir = installArgs.BackendDirectory;
+                var publicDir = installArgs.PublicDirectory;
+                
+                if (!Directory.Exists(updateDir) || !Directory.Exists(backendDir) || !Directory.Exists(publicDir))
+                {
+                    Console.WriteLine("One or more of the required directories does not exist");
+                    return;
+                }
+
+
+                if (wait)
+                {
+                    Console.WriteLine("Waiting for BansheeBlog to exit...");
+                    await AwaitServerShutdown(backendDir);
+                }
+            
+                try
+                {
+                    Console.WriteLine("Deleting backend server files");
+                    File.Delete(Path.Combine(backendDir, "BansheeBlog.dll")); // Main file first to ensure it is closed
+                    DeleteBackendServerFiles(backendDir);
+                    
+                    Console.WriteLine("Deleting admin frontend files");
+                    DeleteAdminFrontendFiles(publicDir);
+                    
+                    Console.WriteLine("Installing updated backend server files");
+                    MoveBackendServerFiles(updateDir, backendDir);
+                    
+                    Console.WriteLine("Installing updated admin frontend files");
+                    MoveAdminFrontendFiles(updateDir, publicDir);
+                    
+                    Console.WriteLine("Cleaning up after update");
+                    Cleanup(updateDir);
+
+                    if (wait)
+                    {
+                        Console.WriteLine("Starting BansheeBlog");
+                        StartServer(backendDir);
+                    }
+                
+                    Console.WriteLine("\nDone! This updater closes in 3 seconds, bye :)");
+                    await Task.Delay(3000);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Blast!");
+                    Console.WriteLine(e.Message);
+                }
             }
         }
 
@@ -70,10 +110,11 @@ namespace UpdateBansheeBlog
         
         private static void DeleteBackendServerFiles(string backendDir)
         {
-            var files = Directory.EnumerateFiles(backendDir, "*", SearchOption.TopDirectoryOnly);
+            var files = Directory.EnumerateFiles(backendDir, "*", SearchOption.TopDirectoryOnly)
+                .Where(file => !UpdaterFiles.Contains(Path.GetFileName(file)));
+            
             foreach (var file in files)
             {
-                if (file.Contains("UpdateBansheeBlog")) continue;
                 File.Delete(file);
             }
             Directory.Delete(Path.Combine(backendDir, "runtimes"), true);
