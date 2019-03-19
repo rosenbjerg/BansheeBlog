@@ -7,13 +7,13 @@ namespace BansheeBlog.Models
     public class Configuration
     {
         [JsonProperty(Required = Required.Always)]
+        public int Port { get; set; } = 5420;
+        
+        [JsonProperty(Required = Required.Always)]
         public string DatabaseFilePath { get; set; } = Path.Combine("data", "database", "database.sqlite");
         
         [JsonProperty(Required = Required.Always)]
         public string AnalyticsDatabaseFilePath { get; set; } = Path.Combine("data", "database", "analytics.sqlite");
-
-        [JsonProperty(Required = Required.Always)]
-        public int Port { get; set; } = 5420;
         
         [JsonProperty(Required = Required.Always)]
         public string PublicDirectory { get; set; } = Path.Combine("data", "public");
