@@ -1,14 +1,41 @@
 .home {
-	padding: 74px 20px 20px;
-	min-height: 100%;
+	padding: 66px 6px 6px;
 	width: 100%;
 }
 
 .card {
 	padding: 12px;
-	max-width: 800px;
-	margin: 8px auto auto;
+	margin: 8px;
+	display: inline-block;
+	float: left;
 }
+
+.oneBlock {
+	min-width: 15%;
+	width: 242px;
+	height: 60px;
+}
+.twoBlock {
+	min-width: 30%;
+	width: 500px;
+	height: 136px;
+}
+.threeBlock {
+	min-width: 30%;
+	width: 500px;
+	height: 170px;
+}
+.fourBlock {
+	min-width: 30%;
+	width: 500px;
+	height: 240px;
+}
+.fiveBlock {
+	min-width: 30%;
+	width: 500px;
+	height: 264px;
+}
+
 
 .files {
 	font-size: 12pt;

@@ -15,24 +15,10 @@ import Card from 'preact-material-components/Card';
 import Typography from 'preact-material-components/Typography';
 import Dialog from 'preact-material-components/Dialog';
 import Icon from 'preact-material-components/Icon';
-
 import Button from 'preact-material-components/Button';
 import TextField from 'preact-material-components/TextField';
 import Switch from 'preact-material-components/Switch';
-// import 'preact-material-components/Switch/style.css';
-// import 'preact-material-components/Dialog/style.css';
-// import 'preact-material-components/Icon/style.css';
-// import 'preact-material-components/Typography/style.css';
-// import 'preact-material-components/Card/style.css';
-// import 'preact-material-components/Button/style.css';
-// import 'preact-material-components/TextField/style.css';
-
 import Select from 'preact-material-components/Select';
-// import 'preact-material-components/List/style.css';
-// import 'preact-material-components/Menu/style.css';
-// import 'preact-material-components/Select/style.css';
-// import 'preact-material-components/FormField/style.css';
-
 
 export default class Settings extends Component {
 
@@ -229,52 +215,64 @@ export default class Settings extends Component {
 	render(props, state) {
     	return (
     		<div class={style.home}>
-    			<Card class={style.card}>
-    				<Typography headline4>
-						Settings
-						<Icon class="hoverIcon right" onClick={this.save}>save</Icon>
-    				</Typography>
-					<br />
-
+				<Typography headline4>
+					Settings
+					<Icon class="hoverIcon right" onClick={this.save}>save</Icon>
+				</Typography>
+				<br />
+    			<Card class={[style.card, style.fourBlock].join(' ')}>
     				<Typography headline6>Blog info</Typography>
     				<TextField className="fullwidth" label="Author" value={state.settings.Author} onChange={linkState(this, 'settings.Author')} />
     				<TextField className="fullwidth" label="Blog title" value={state.settings.BlogTitle} onChange={linkState(this, 'settings.BlogTitle')} />
     				<TextField className="fullwidth" label="Blog description" value={state.settings.BlogDescription} onChange={linkState(this, 'settings.BlogDescription')} />
-					<br />
-
-    				<Typography headline6>Analytics</Typography>
-    				<TextField className="fullwidth" label="Google Analytics Tracking ID" value={state.settings.GoogleAnalyticsTrackingId} onChange={linkState(this, 'settings.GoogleAnalyticsTrackingId')} />
-    				<div style={{ margin: '8px 0 8px 4px' }}>
-    					<Typography style={{ 'margin-right': '10px' }} body1>Use server-side tracking to monitor visits</Typography>
-    					<Switch checked={state.settings.UseServerSideTracking} onChange={linkState(this, 'settings.UseServerSideTracking')} />
-    				</div>
-    				<Button onClick={this.openAnalyticsDialog}>View analytics</Button>
-					<br />
-
-    				<Typography headline6>Themes</Typography>
-    				<Select hintText="Blog theme" selectedIndex={state.themes.findIndex(this.findActiveThemeIndex) + 1} onInput={this.themeChanged}>
-    					{state.themes.map(theme => <Select.Item>{theme.name}</Select.Item>)}
-    				</Select>
-    				<Button onClick={this.openThemeDialog}>Manage blog themes</Button>
-					<br />
-
-    				<Typography headline6>Public files</Typography>
-    				<Button onClick={this.openStaticFileDialog}>Manage public files</Button>
-					<br />
-
-    				<Typography headline6>Navigation</Typography>
-    				<Button onClick={this.openNavigationDialog}>Manage navigation</Button>
-					<br />
-
-    				<Typography headline6>Change your admin password</Typography>
-    				<form onSubmit={this.submitPasswordChange}>
-    					<TextField name="oldPassword"  class="fullwidth" label="Current password" required />
-    					<TextField name="newPassword1" class="fullwidth" label="New password" required minLength="8" maxLength="60" />
-    					<TextField name="newPassword2" class="fullwidth" label="Repeat new password" required minLength="8" maxLength="60" />
-    					<Button type="submit" class="fullwidth">Change password</Button>
-    				</form>
-
     			</Card>
+
+				<Card class={[style.card, style.threeBlock].join(' ')}>
+					<Typography headline6>Analytics</Typography>
+					<Icon class="hoverIcon right" onClick={this.openAnalyticsDialog} title="View analytics">open_in_new</Icon>
+
+					<TextField className="fullwidth" label="Google Analytics Tracking ID" value={state.settings.GoogleAnalyticsTrackingId} onChange={linkState(this, 'settings.GoogleAnalyticsTrackingId')} />
+					<div style={{ margin: '8px 0 8px 4px' }}>
+						<Typography style={{ 'margin-right': '10px' }} body1>Server-side analytics</Typography>
+						<Switch checked={state.settings.UseServerSideTracking} onChange={linkState(this, 'settings.UseServerSideTracking')} />
+					</div>
+				</Card>
+
+				<Card class={[style.card, style.oneBlock].join(' ')}>
+					<Typography headline6>Public files</Typography>
+					<Icon class="hoverIcon right" onClick={this.openStaticFileDialog} title="Manage public files">open_in_new</Icon>
+				</Card>
+
+				<Card class={[style.card, style.oneBlock].join(' ')}>
+					<Typography headline6>Navigation</Typography>
+					<Icon class="hoverIcon right" onClick={this.openNavigationDialog} title="Manage navigation items">open_in_new</Icon>
+				</Card>
+
+				<Card class={[style.card, style.twoBlock].join(' ')}>
+					<Typography headline6>Themes</Typography>
+					<Icon class="hoverIcon right" onClick={this.openThemeDialog} title="Manage blog themes">open_in_new</Icon>
+
+					<div>
+						<Select class="fullwidth" hintText="Blog theme" selectedIndex={state.themes.findIndex(this.findActiveThemeIndex) + 1} onInput={this.themeChanged}>
+							{state.themes.map(theme => <Select.Item>{theme.name}</Select.Item>)}
+						</Select>
+					</div>
+				</Card>
+
+				<Card class={[style.card, style.oneBlock].join(' ')}>
+					<Typography headline6>Updates</Typography>
+					<Icon class="hoverIcon right" onClick={this.openNavigationDialog} title="Check for updates">autorenew</Icon>
+				</Card>
+
+				<Card class={[style.card, style.fiveBlock].join(' ')}>
+					<Typography headline6>Change your admin password</Typography>
+					<form onSubmit={this.submitPasswordChange}>
+						<TextField name="oldPassword"  class="fullwidth" label="Current password" required />
+						<TextField name="newPassword1" class="fullwidth" label="New password" required minLength="8" maxLength="60" />
+						<TextField name="newPassword2" class="fullwidth" label="Repeat new password" required minLength="8" maxLength="60" />
+						<Button type="submit" class="fullwidth">Change password</Button>
+					</form>
+				</Card>
 
     			<Dialog ref={this.bindAnalyticsDialog}>
     				<Dialog.Header>Analytics</Dialog.Header>
