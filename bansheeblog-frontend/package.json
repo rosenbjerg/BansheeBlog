@@ -41,6 +41,7 @@
     "preact-material-components": "^1.4.3",
     "preact-router": "^2.5.5",
     "preact-token-input": "^0.3.0",
-    "simplemde": "^1.11.2"
+    "simplemde": "^1.11.2",
+    "snarkdown": "^1.2.2"
   }
 }
