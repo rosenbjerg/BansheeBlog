@@ -108,9 +108,7 @@ namespace UpdateBansheeBlog
         
         private static void DeleteBackendServerFiles(string backendDir)
         {
-            var files = Directory.EnumerateFiles(backendDir, "*", SearchOption.TopDirectoryOnly)
-                .Where(file => !UpdaterFiles.Contains(Path.GetFileName(file)));
-            
+            var files = Directory.EnumerateFiles(backendDir, "*", SearchOption.TopDirectoryOnly);
             foreach (var file in files)
             {
                 File.Delete(file);

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Red;
 using Red.CookieSessions;
 using SQLite;
+using UpdateBansheeBlog;
 
 namespace BansheeBlog
 {
@@ -42,19 +43,19 @@ namespace BansheeBlog
                 });
             };
             
-            
-            
+            // Cleanup after updates
+            if (Directory.Exists(Updater.TemporaryUpdater))
+                Directory.Delete(Updater.TemporaryUpdater, true);
             
             // Setup database and tables
             Directory.CreateDirectory(Path.GetDirectoryName(config.AnalyticsDatabaseFilePath));
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
             await Task.WhenAll(db.CreateTableAsync<Session>(),
-                                           db.CreateTableAsync<User>(),
-                                           db.CreateTableAsync<Article>(),
-                                           db.CreateTableAsync<ArticleHtml>(),
-                                           db.CreateTableAsync<ArticleMarkdown>());
+                               db.CreateTableAsync<User>(),
+                               db.CreateTableAsync<Article>(),
+                               db.CreateTableAsync<ArticleHtml>(),
+                               db.CreateTableAsync<ArticleMarkdown>());
 
-            
             // Cookie session authentication
             server.Use(new CookieSessions<Session>(TimeSpan.FromDays(14))
             {

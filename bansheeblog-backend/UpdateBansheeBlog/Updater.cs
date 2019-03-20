@@ -16,7 +16,7 @@ namespace UpdateBansheeBlog
             "https://api.github.com/repos/rosenbjerg/BansheeBlog/releases/latest";
         
         private const string UserAgentValue = "BansheeBlogUpdater";
-
+        public const string TemporaryUpdater = "temporary-updater";
         
         private static async Task<GitHubReleaseInfo> GetLatestReleaseInfo()
         {
@@ -80,19 +80,26 @@ namespace UpdateBansheeBlog
             var releaseInfo = await GetLatestReleaseInfo();
             var updateAsset = releaseInfo.assets.FirstOrDefault(asset =>
                 asset.name.StartsWith("banshee-blog") && asset.name.EndsWith(".zip"));
+
+            if (updateAsset == null) return false;
             
-            if (updateAsset != null)
+            var updaterFiles = new [] {"UpdateBansheeBlog.dll", "UpdateBansheeBlog.pdb", "Commander.NET.dll", "Newtonsoft.Json.dll"};
+            var tempUpdate = Path.Combine(backendDir, TemporaryUpdater);
+            foreach (var updaterFile in updaterFiles)
             {
-                var unzipDir = await DownloadAndExtractUpdate(tempDir, updateAsset);
-                var startInfo = new ProcessStartInfo("dotnet")
-                {
-                    WorkingDirectory = backendDir,
-                    Arguments = $"UpdateBansheeBlog.dll --wait-install --update-dir \"{unzipDir}\" --backend-dir \"{backendDir}\" --public-dir \"{publicDir}\""
-                };
-                Process.Start(startInfo);
-                return true;
+                var currentPath = Path.Combine(backendDir, updaterFile);
+                var newPath = Path.Combine(tempUpdate, updaterFile);
+                File.Copy(currentPath, newPath, true);
             }
-            return false;
+                
+            var unzipDir = await DownloadAndExtractUpdate(tempDir, updateAsset);
+            var startInfo = new ProcessStartInfo("dotnet")
+            {
+                WorkingDirectory = backendDir,
+                Arguments = $"{Path.Combine(TemporaryUpdater, "UpdateBansheeBlog.dll")} --wait-install --update-dir \"{unzipDir}\" --backend-dir \"{backendDir}\" --public-dir \"{publicDir}\""
+            };
+            Process.Start(startInfo);
+            return true;
         }
     }
     public class UpdatesAvailableStatus
