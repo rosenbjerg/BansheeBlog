@@ -68,6 +68,7 @@ namespace UpdateBansheeBlog
             {
                 Available = newerAvailable,
                 Version = releaseInfo.tag_name,
+                Name = releaseInfo.name,
                 Message = releaseInfo.body,
                 Url = releaseInfo.html_url,
                 Released = releaseInfo.created_at
@@ -98,6 +99,7 @@ namespace UpdateBansheeBlog
     {
         public bool Available;
         public string Version;
+        public string Name;
         public string Message;
         public string Url;
         public DateTime Released;

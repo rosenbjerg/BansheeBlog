@@ -44,6 +44,7 @@ namespace BansheeBlog
             
             
             
+            
             // Setup database and tables
             Directory.CreateDirectory(Path.GetDirectoryName(config.AnalyticsDatabaseFilePath));
             var db = new SQLiteAsyncConnection(config.DatabaseFilePath);
