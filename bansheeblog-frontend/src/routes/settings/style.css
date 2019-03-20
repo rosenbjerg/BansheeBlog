@@ -1,6 +1,8 @@
 .home {
 	padding: 66px 6px 6px;
 	width: 100%;
+	max-width: 1200px;
+	margin: auto;
 }
 
 .card {
