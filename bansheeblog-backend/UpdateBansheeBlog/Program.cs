@@ -8,13 +8,7 @@ using Commander.NET;
 namespace UpdateBansheeBlog
 {
     class Program
-    {
-        private const string InstallCommand = " --install";
-        private const string WaitInstallCommand = " --wait-install";
-        private const string CheckCommand = " --check";
-
-        private static readonly string[] UpdaterFiles = {"UpdateBansheeBlog.dll", "UpdateBansheeBlog.runtimeconfig.json", "Newtonsoft.Json.dll", "Commander.NET.dll"};
-        
+    {     
         static async Task Main(string[] args)
         {
             Console.WriteLine("BansheeBlog updater\n");

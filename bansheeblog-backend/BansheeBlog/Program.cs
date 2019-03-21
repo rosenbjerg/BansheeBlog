@@ -42,10 +42,8 @@ namespace BansheeBlog
                     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
                 });
             };
-            
-            // Cleanup after updates
-            if (Directory.Exists(Updater.TemporaryUpdater))
-                Directory.Delete(Updater.TemporaryUpdater, true);
+
+            FileHandling.CleanupTemporaryUpdater();
             
             // Setup database and tables
             Directory.CreateDirectory(Path.GetDirectoryName(config.AnalyticsDatabaseFilePath));

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BansheeBlog.Models;
 using HandlebarsDotNet;
 using Microsoft.AspNetCore.Http;
+using UpdateBansheeBlog;
 
 namespace BansheeBlog.Utility
 {
@@ -38,6 +39,20 @@ namespace BansheeBlog.Utility
             }
 
             return tempPath;
+        }
+
+        public static async Task CleanupTemporaryUpdater()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(7));
+            try
+            {
+                if (Directory.Exists(Updater.TemporaryUpdater))
+                    Directory.Delete(Updater.TemporaryUpdater, true);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Failed to delete temporary-updater folder");
+            }
         }
     }
 }
