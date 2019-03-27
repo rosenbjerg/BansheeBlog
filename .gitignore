@@ -1,6 +1,8 @@
 credentials.txt
 *.zip
 
+banshee-blog/
+
 **/data/public/static/
 **/data/public/admin/
 **/data/database/
