@@ -59,19 +59,26 @@ namespace BansheeBlog.Routes
         {
             return async (req, res) =>
             {
-                var sessionUser = req.GetSession<User>();
+                var sessionUser = req.GetSession<Session>();
+                var user = await db.FindAsync<User>(u => u.Username == sessionUser.Username);
 
+                if (user == null)
+                {
+                    await res.SendStatus(HttpStatusCode.Unauthorized);
+                    return;
+                }
+                
                 var form = await req.GetFormDataAsync();
 
                 if (form == null || form["newPassword1"] != form["newPassword2"] || form["newPassword1"][0].Length < 8 ||
-                    !BCrypt.Net.BCrypt.Verify(form["oldPassword"], sessionUser.Password))
+                    !BCrypt.Net.BCrypt.Verify(form["oldPassword"], user.Password))
                 {
                     await res.SendStatus(HttpStatusCode.BadRequest);
                 }
                 else
                 {
-                    sessionUser.Password = BCrypt.Net.BCrypt.HashPassword(form["newPassword1"], 11);
-                    await db.UpdateAsync(sessionUser);
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(form["newPassword1"], 11);
+                    await db.UpdateAsync(user);
                     await res.SendStatus(HttpStatusCode.OK);
                 }
             };

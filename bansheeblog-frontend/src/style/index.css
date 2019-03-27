@@ -121,8 +121,11 @@ html, body {
 .striped {
     border-collapse: collapse;
 }
-.striped tr:nth-child(even) {
+.striped tr:nth-child(odd) {
     background-color: #F6F6F6;
+}
+.striped tr td:first-child {
+    padding-left: 8px;
 }
 .striped tr td:last-child {
     float: right;

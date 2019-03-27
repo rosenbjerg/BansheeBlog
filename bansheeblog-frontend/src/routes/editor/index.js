@@ -1,25 +1,16 @@
 import { h, Component } from 'preact';
 import style from './style.css';
 import TokenInput from 'preact-token-input';
+import { Get, Put } from '../../Fetcher';
+import Globals from '../../Globals';
+import {route} from "preact-router";
+import slugify from 'slugify';
+import SimpleMDE from 'simplemde';
+import 'simplemde/dist/simplemde.min.css';
+
 import Icon from 'preact-material-components/Icon';
 import TextField from 'preact-material-components/TextField';
 import Typography from 'preact-material-components/Typography';
-// import 'preact-material-components/Icon/style.css';
-// import 'preact-material-components/TextField/style.css';
-// import 'preact-material-components/Typography/style.css';
-import { Get, Put } from '../../Fetcher';
-
-import SimpleMDE from 'simplemde';
-import 'simplemde/dist/simplemde.min.css';
-import Globals from '../../Globals';
-import {route} from "preact-router";
-
-const slugify = input => input.toLowerCase()
-	.replace(/\s+/g, '-')
-	.replace(/[^\w-]+/g, '')
-	.replace(/--+/g, '-')
-	.replace(/^-+/, '')
-	.replace(/-+$/, '');
 
 export default class Editor extends Component {
 
@@ -121,6 +112,10 @@ export default class Editor extends Component {
 
     updateTags = ev => this.setState({ tags: ev.value });
 
+	gotoArticle = () => {
+		window.open(`/article/${this.state.slug}`, '_blank');
+	};
+
 	setTitle = ev => {
 		const title = ev.target.value;
 		const slug = slugify(title);
@@ -132,12 +127,14 @@ export default class Editor extends Component {
 	}
 
 	render(props, state) {
+		let shortcut = state.id && state.public;
 		return (
 			<div class={style.home}>
 				<div>
 					<Typography headline4>Article editor</Typography>
 					<Icon title="Toggle public" class={'hoverIcon' + (state.public ? '' : ' untoggled')} onClick={this.togglePublic}>public</Icon>
 					<Icon class="hoverIcon" title="Save article" onClick={this.save}>save</Icon>
+					{shortcut && (<Icon class="hoverIcon" title="Go to article" onClick={this.gotoArticle}>open_in_new</Icon>)}
 				</div>
 				<div>
 					<TextField className="fullwidth" label="Title" value={state.title} onInput={this.setTitle} />

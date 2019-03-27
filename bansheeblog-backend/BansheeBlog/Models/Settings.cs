@@ -27,9 +27,8 @@ namespace BansheeBlog.Models
         [JsonProperty(Required = Required.Always)]
         public bool UseServerSideTracking { get; set; }
         
-        // Should be uncommented in a later version
-        // [JsonProperty(Required = Required.Always)]
-        public List<NavigationElement> Navigation { get; set; } 
+        [JsonProperty(Required = Required.Always)]
+        public List<NavigationElement> Navigation { get; set; } = new List<NavigationElement>();
         
         public static Settings Load(string filepath)
         {
@@ -37,15 +36,6 @@ namespace BansheeBlog.Models
                 return new Settings();
             var json = File.ReadAllText(filepath);
             var obj = JsonConvert.DeserializeObject<Settings>(json);
-            if (obj.Navigation == null)
-                obj.Navigation = new List<NavigationElement>
-                {
-                    new NavigationElement
-                    {
-                        Name = "Home",
-                        Href = "/"
-                    }
-                };
             return obj;
         }
     }

@@ -38,27 +38,3 @@
 	height: 264px;
 }
 
-
-.files {
-	font-size: 12pt;
-}
-
-.fileList {
-	max-height: 360px;
-	overflow-x: hidden;
-	overflow-y: auto;
-}
-.fileList:empty::after {
-	content: 'Nothing uploaded yet';
-}
-
-.groupbutton {
-	border: 1px;
-	border-radius: 2px;
-	background-color: transparent;
-	cursor: pointer;
-}
-.groupbutton:focus {
-	outline: none;
-	text-decoration: underline;
-}

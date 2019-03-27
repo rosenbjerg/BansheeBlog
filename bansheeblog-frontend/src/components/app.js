@@ -1,18 +1,13 @@
 import { h, Component } from 'preact';
 import { route, Router } from 'preact-router';
+import AsyncRoute from 'preact-async-route';
 import Globals from '../Globals';
-
-
-import Snackbar from 'preact-material-components/Snackbar';
-// import 'preact-material-components/Snackbar/style.css';
-
+import { Get } from '../Fetcher';
 import Header from './header';
 import Articles from '../routes/articles';
-// import Editor from '../routes/editor';
 import Login from '../routes/login';
-// import Settings from '../routes/settings';
-import { Get } from '../Fetcher';
-import AsyncRoute from 'preact-async-route';
+
+import Snackbar from 'preact-material-components/Snackbar';
 
 
 const loadEditor = () => import('../routes/editor').then(module => module.default);
@@ -53,12 +48,10 @@ export default class App extends Component {
     		<div id="app">
     			<Header />
     			<Router>
-    				<Articles path="/admin/" default />
-    				<Login path="/admin/login" />
+					<Login path="/admin/login" default />
+					<Articles path="/admin/" />
     				<AsyncRoute path="/admin/editor/:articleId?" getComponent={loadEditor} />
     				<AsyncRoute path="/admin/settings" getComponent={loadSettings} />
-    				{/*<Editor path="/admin/editor/:articleId?" />*/}
-    				{/*<Settings path="/admin/settings" />*/}
     			</Router>
     			<Snackbar dismissesOnAction ref={this.bindSnackbar} />
     		</div>

@@ -1,19 +1,13 @@
 import { h, Component } from 'preact';
-import Card from 'preact-material-components/Card';
-// import 'preact-material-components/Card/style.css';
-// import 'preact-material-components/Button/style.css';
-import Typography from 'preact-material-components/Typography';
-// import 'preact-material-components/Typography/style.css';
-import { Post } from '../../Fetcher';
 import { route } from 'preact-router';
+import { Get, Post } from '../../Fetcher';
+
+import Card from 'preact-material-components/Card';
+import Typography from 'preact-material-components/Typography';
 import TextField from 'preact-material-components/TextField';
-// import 'preact-material-components/TextField/style.css';
 
 import style from './style.css';
 
-const cardStyle = {
-	margin: 10
-};
 const loginStyle = {
 	'max-width': 600,
 	margin: 'auto',
@@ -22,7 +16,7 @@ const loginStyle = {
 };
 
 
-export default class Articles extends Component {
+export default class Login extends Component {
 
     login = async ev => {
     	ev.preventDefault();
@@ -34,8 +28,16 @@ export default class Articles extends Component {
     	}
     };
 
+    checkLoggedIn = async () => {
+		const response = await Get('/api/verify');
+		if (response.ok) route('/admin/', true);
+	};
 
-    render() {
+    componentDidMount() {
+		this.checkLoggedIn();
+	}
+
+	render(props, state) {
     	return (
     		<div className={style.home}>
     			<Card style={loginStyle}>

@@ -1,0 +1,10 @@
+.groupButton {
+    border: 1px;
+    border-radius: 2px;
+    background-color: transparent;
+    cursor: pointer;
+}
+.groupButton:focus {
+    outline: none;
+    text-decoration: underline;
+}

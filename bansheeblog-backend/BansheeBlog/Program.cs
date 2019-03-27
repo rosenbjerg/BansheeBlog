@@ -22,7 +22,7 @@ namespace BansheeBlog
         public const bool DEV = false;
 #endif
         
-        public const string Version = "1.2.1";
+        public const string Version = "1.2.2";
         public const string ConfigPath = "config.json";
         public const string SettingsPath = "settings.json";
         
@@ -66,7 +66,7 @@ namespace BansheeBlog
             Directory.CreateDirectory(config.TempDirectory);
             
             // Check if first start and create admin user
-            CreateFirstUser(db);
+            StartUpCheck(db);
             
             // Initialize partial templates
             var partials = new[] {"header", "footer", "navigation", "meta", "style"};
@@ -117,7 +117,7 @@ namespace BansheeBlog
         }
         
         
-        private static async void CreateFirstUser(SQLiteAsyncConnection db)
+        private static async void StartUpCheck(SQLiteAsyncConnection db)
         {
             if (await db.Table<User>().FirstOrDefaultAsync() == null)
             {
