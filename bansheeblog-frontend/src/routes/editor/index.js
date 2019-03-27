@@ -12,6 +12,7 @@ import { Get, Put } from '../../Fetcher';
 import SimpleMDE from 'simplemde';
 import 'simplemde/dist/simplemde.min.css';
 import Globals from '../../Globals';
+import {route} from "preact-router";
 
 const slugify = input => input.toLowerCase()
 	.replace(/\s+/g, '-')
@@ -43,8 +44,9 @@ export default class Editor extends Component {
 		};
 
 		if (this.props.articleId) {
-			const metaPromise = Get(`/api/article/${this.props.articleId}`).then(response => response.json());
-			const markdownPromise = Get(`/api/article/${this.props.articleId}/markdown`).then(response => response.json());
+			this.articleId = this.props.articleId;
+			const metaPromise = Get(`/api/article/${this.articleId}`).then(response => response.json());
+			const markdownPromise = Get(`/api/article/${this.articleId}/markdown`).then(response => response.json());
 
 			const articleData = await Promise.all([ metaPromise, markdownPromise ]);
 			const meta = articleData[0];
@@ -52,8 +54,8 @@ export default class Editor extends Component {
 
 			this.setState({
 				id: meta.Id,
-				title: meta.Title,
 				slug: meta.Slug,
+				title: meta.Title,
 				tags: meta.Tags.split('\n'),
 				created: meta.Created,
 				lastEdit: meta.Edited,
@@ -72,20 +74,33 @@ export default class Editor extends Component {
 		}
 		this.state.markdown = this.mde.value();
 		const article = {
-			Title: this.state.title,
 			Slug: this.state.slug,
-			Markdown: this.state.markdown,
+			Title: this.state.title,
 			Tags: this.state.tags.join('\n'),
+			Markdown: this.state.markdown,
 			Public: this.state.public,
 			Created: new Date(),
 			Edited: new Date()
 		};
-		if (this.props.articleId) {
-			article.Id = this.state.id;
+		if (this.articleId) {
+			article.Id = this.articleId;
 			article.Created = this.state.created;
 		}
 		const response = await Put('/api/article', article);
 		if (response.ok) {
+			if (!this.articleId) {
+				this.articleId = await response.text();
+				route(`/admin/editor/${this.articleId}`, true);
+				this.setState({
+					id: article.Id,
+					slug: article.Slug,
+					title: article.Title,
+					tags: article.Tags.split('\n'),
+					created: article.Created,
+					lastEdit: article.Edited,
+					public: article.Public
+				});
+			}
 			Globals.showSnackbar('Article saved!');
 		}
 		else {

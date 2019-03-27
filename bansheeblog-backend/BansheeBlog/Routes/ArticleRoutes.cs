@@ -104,7 +104,7 @@ namespace BansheeBlog.Routes
                 }
                 else
                 {
-                    article = new Article {Id = Guid.NewGuid(), Created = DateTime.UtcNow, Author = sessionData.Name};
+                    article = new Article {Id = Guid.NewGuid(), Author = sessionData.Name};
                     articleHtml = new ArticleHtml {Id = article.Id};
                     articleMarkdown = new ArticleMarkdown {Id = article.Id};
                 }
@@ -128,7 +128,7 @@ namespace BansheeBlog.Routes
                     await db.UpdateAllAsync(new object[] {article, articleHtml, articleMarkdown});
                 }
 
-                await res.SendStatus(HttpStatusCode.OK);
+                await res.SendString(article.Id.ToString());
             };
         }
 

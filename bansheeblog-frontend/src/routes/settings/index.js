@@ -283,7 +283,7 @@ export default class Settings extends Component {
 						<Button type="submit" class="fullwidth">Change password</Button>
 					</form>
 				</Card>
-				
+
     			<Card class={[style.card, style.oneBlock].join(' ')}>
     				<Typography headline6>Updates</Typography>
     				<Icon class="hoverIcon right" onClick={this.openUpdateDialog} title="Check for updates">autorenew</Icon>
@@ -460,7 +460,7 @@ export default class Settings extends Component {
 				<Dialog ref={this.bindUpdateDialog} onAccept={this.initiateUpdate}>
 					<Dialog.Header>Updates available!</Dialog.Header>
 					<Dialog.Body>
-						{state.updatesFound && updates.Available ? (
+						{state.updatesFound && state.updatesFound.Available ? (
 							<span>
 								<div>
 									<Typography body1>Name: <b>{state.updatesFound.Name}</b></Typography>
