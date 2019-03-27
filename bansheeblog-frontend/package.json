@@ -5,9 +5,9 @@
   "license": "GPLv3",
   "scripts": {
     "start": "if-env NODE_ENV=production && npm run -s serve || npm run -s dev",
-    "build": "preact build --template src/template.html",
+    "build": "preact build --template src/template.html --config preact.production.config.js --dest ../banshee-blog/data/public/admin --clean",
     "serve": "preact build && preact serve",
-    "dev": "preact watch ",
+    "dev": "preact watch --config preact.development.config.js",
     "lint": "eslint src"
   },
   "eslintConfig": {
