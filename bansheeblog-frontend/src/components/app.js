@@ -25,7 +25,7 @@ export default class App extends Component {
 
 		Globals.showSnackbar = text =>  {
 			this.snackbar.MDComponent.show({
-				message: text,
+				message: text.substr(0, 180),
 				actionText: '✖',
 				multiline: text.length > 45,
 				timeout: 1000 + text.length * 45,
