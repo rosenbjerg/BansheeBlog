@@ -9,7 +9,8 @@ if (!version.match(/^\d+\.\d+\.\d+$/)) return console.log('-- invalid version. m
 
 console.log(`-- building BansheeBlog v. ${version} --`);
 
-const releasePath = path.resolve('banshee-blog');
+const basePath = path.resolve(`release`);
+const releasePath = path.join(basePath, 'banshee-blog');
 const frontendPath = path.resolve('bansheeblog-frontend');
 const backendPath = path.resolve('bansheeblog-backend');
 
@@ -26,9 +27,7 @@ buildTask('updating backend versioning', () => {
     return replaceInFile(backendProgramPath, /public const string Version = "[^"]+";/, `public const string Version = "${version}";`);
 });
 
-buildTask('removing old files', () => {
-    return deleteFolder(releasePath);
-});
+buildTask('removing old files', () => deleteFolder(basePath));
 
 buildTask('building backend updater', () => {
     const backendUpdaterProjectPath = path.join(backendPath, 'UpdateBansheeBlog', 'UpdateBansheeBlog.csproj');
@@ -61,13 +60,9 @@ buildTask('copying favicons', () => {
     return copyFolder(faviconsInput, faviconsOutput);
 });
 
-buildTask('building zip archive', () => {
-    return zipDirectory(releasePath, `banshee-blog-v-${version.replace(/\./g, '-')}`);
-});
+buildTask('building zip archive', () => zipDirectory(releasePath, `banshee-blog-v-${version.replace(/\./g, '-')}.zip`));
 
-buildTask('removing archived files', () => {
-    return deleteFolder(releasePath);
-});
+buildTask('removing archived files', () => deleteFolder(basePath));
 
 console.log(`-- done building in ${((Date.now() - started) / 1000.0).toFixed(1)} seconds --`);
 
@@ -87,7 +82,7 @@ function zipDirectory(sourceDir, outputFilename) {
     if (fs.existsSync(outputFilename)) fs.unlinkSync(outputFilename);
     let command;
     if (process.platform === 'win32')
-        command = `powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('${sourceDir}', '${outputFilename}.zip'); }"`;
+        command = `powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('${sourceDir}', '${outputFilename}', '0', 'true'); }"`;
     else
         command = `zip -r -y "${outputFilename}" "${sourceDir}"`;
     
