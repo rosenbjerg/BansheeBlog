@@ -48,7 +48,7 @@ buildTask('copying themes folder', () => {
 });
 
 buildTask('building frontend', () => {
-    const frontendBuildDir = path.join(frontendPath, 'data', 'public', 'admin');
+    const frontendBuildDir = path.join(releasePath, 'data', 'public', 'admin');
     createDirectory(frontendBuildDir);
     const frontendBuildScript = `preact build --template src/template.html --config preact.production.config.js --dest "${frontendBuildDir}" --clean`;
     return !child_process.execSync(frontendBuildScript, { cwd: frontendPath ,  }).toString().includes('Error');
