@@ -118,7 +118,7 @@ export default class Editor extends Component {
 
 	setTitle = ev => {
 		const title = ev.target.value;
-		const slug = slugify(title);
+		const slug = slugify(title, { lower: true  });
 		this.setState({ title, slug });
 	};
 
