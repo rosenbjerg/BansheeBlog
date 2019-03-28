@@ -2,15 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const child_process = require('child_process');
 
+const started = Date.now();
 const version = process.argv[2];
-if (!version) {
-    console.log('-- no version found in arguments --');
-    return;
-}
-if (!version.match(/^\d+\.\d+\.\d+$/)) {
-    console.log('-- invalid version. must be in the format x.x.x --');
-    return;
-}
+if (!version) return console.log('-- no version found in arguments --');
+if (!version.match(/^\d+\.\d+\.\d+$/)) return console.log('-- invalid version. must be in the format x.x.x --');
 
 console.log(`-- building BansheeBlog v. ${version} --`);
 
@@ -18,41 +13,144 @@ const releasePath = path.resolve('banshee-blog');
 const frontendPath = path.resolve('bansheeblog-frontend');
 const backendPath = path.resolve('bansheeblog-backend');
 
-if (!fs.existsSync(releasePath)){
-    fs.mkdirSync(releasePath);
+createDirectory(releasePath);
+
+buildTask('updating frontend versioning', () => {
+    const frontendPackagePath = path.join(frontendPath, 'package.json');
+    return replaceInFile(frontendPackagePath, /"version": "[^"]+",/, `"version": "${version}",`);
+});
+
+
+buildTask('updating backend versioning', () => {
+    const backendProgramPath = path.join(backendPath, 'BansheeBlog', 'Program.cs');
+    return replaceInFile(backendProgramPath, /public const string Version = "[^"]+";/, `public const string Version = "${version}";`);
+});
+
+buildTask('removing old files', () => {
+    return deleteFolder(releasePath);
+});
+
+buildTask('building backend updater', () => {
+    const backendUpdaterProjectPath = path.join(backendPath, 'UpdateBansheeBlog', 'UpdateBansheeBlog.csproj');
+    const backendUpdaterBuildScript = `dotnet publish "${backendUpdaterProjectPath}" --configuration Release --verbosity quiet --output "${releasePath}"`;
+    return !child_process.execSync(backendUpdaterBuildScript).toString().includes('Error');
+});
+
+buildTask('building backend', () => {
+    const backendProjectPath = path.join(backendPath, 'BansheeBlog', 'BansheeBlog.csproj');
+    const backendBuildScript = `dotnet publish "${backendProjectPath}" --configuration Release --verbosity quiet --output "${releasePath}"`;
+    return !child_process.execSync(backendBuildScript).toString().includes('Error');
+});
+
+buildTask('copying themes folder', () => {
+    const themesInput = path.join(backendPath, 'BansheeBlog', 'data', 'themes');
+    const themesOutput = path.join(releasePath, 'data', 'themes');
+    return copyFolder(themesInput, themesOutput);
+});
+
+buildTask('building frontend', () => {
+    const frontendBuildDir = path.join(frontendPath, 'data', 'public', 'admin');
+    createDirectory(frontendBuildDir);
+    const frontendBuildScript = `preact build --template src/template.html --config preact.production.config.js --dest "${frontendBuildDir}" --clean`;
+    return !child_process.execSync(frontendBuildScript, { cwd: frontendPath ,  }).toString().includes('Error');
+});
+
+buildTask('copying favicons', () => {
+    const faviconsInput = path.resolve('favicons');
+    const faviconsOutput = path.join(releasePath, 'data', 'public');
+    return copyFolder(faviconsInput, faviconsOutput);
+});
+
+buildTask('building zip archive', () => {
+    return zipDirectory(releasePath, `banshee-blog-v-${version.replace(/\./g, '-')}`);
+});
+
+buildTask('removing archived files', () => {
+    return deleteFolder(releasePath);
+});
+
+console.log(`-- done building in ${((Date.now() - started) / 1000.0).toFixed(1)} seconds --`);
+
+
+function buildTask(title, action) {
+    process.stdout.write(` ${title}..`.padEnd(35))
+    const started = Date.now();
+    const success = action();
+    let elapsed = Date.now() - started;
+    if (elapsed > 1000) process.stdout.write(`${(elapsed / 1000.0).toFixed(1)}s`.padEnd(8));
+    else process.stdout.write(`${elapsed}ms`.padEnd(8));
+    console.log(success ? '' : 'FAILED!');
+    if (!success) process.exit();
 }
 
+function zipDirectory(sourceDir, outputFilename) {
+    if (fs.existsSync(outputFilename)) fs.unlinkSync(outputFilename);
+    let command;
+    if (process.platform === 'win32')
+        command = `powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('${sourceDir}', '${outputFilename}.zip'); }"`;
+    else
+        command = `zip -r -y "${outputFilename}" "${sourceDir}"`;
+    
+    return !child_process.execSync(command).toString().includes('error');
+}
 
-console.log('-- updating frontend versioning --');
-const frontendPackageJsonPath = path.join(frontendPath, 'package.json');
-const frontendPackageJsonContent = fs.readFileSync(frontendPackageJsonPath, 'utf8');
-const modifiedPackageJsonContent = frontendPackageJsonContent.replace(/"version": "[^"]+",/, `"version": "${version}",`);
-fs.writeFileSync(frontendPackageJsonPath, modifiedPackageJsonContent, 'utf8');
+function replaceInFile(file, regex, replacement) {
+    try {
+        const original = fs.readFileSync(file, 'utf8');
+        const modified = original.replace(regex, replacement);
+        fs.writeFileSync(file, modified, 'utf8');
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
 
+function createDirectory(dir) {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+}
 
-console.log('-- updating backend versioning --');
-const backendProgramPath = path.join(backendPath, 'BansheeBlog', 'Program.cs');
-const backendProgramContent = fs.readFileSync(backendProgramPath, 'utf8');
-const modifiedProgramContent = backendProgramContent.replace(/public const string Version = "[^"]+";/, `public const string Version = "${version}";`);
-fs.writeFileSync(backendProgramPath, modifiedProgramContent, 'utf8');
+function copyFolder(input, output) {
+    try {
+        copyFolderRec(input, output);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
 
+function copyFolderRec(input, output) {
+    createDirectory(output);
+    const entries = fs.readdirSync(input, { withFileTypes: true });
+    const mappedEntries = entries.map(entry => ([entry, entry.isFile()]));
+    mappedEntries.forEach(entry => {
+        const inputPath = path.join(input, entry[0].name);
+        const outputPath = path.join(output, entry[0].name);
+        if (entry[1]) fs.copyFileSync(inputPath, outputPath);
+        else copyFolderRec(inputPath, outputPath);
+    });
+}
 
+function deleteFolder(input) {
+    try {
+        deleteFolderRec(input);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
 
-console.log('-- building frontend --');
-const frontendBuildScriptMatch = frontendPackageJsonContent.match(/"build": "([^"]+)"/);
-const frontendBuildScipt = frontendBuildScriptMatch[1];
-//child_process.exec(frontendBuildScipt, { cwd: frontendPath });
-console.log(frontendBuildScipt);
-
-
-console.log('-- building backend updater --');
-const backendUpdaterProjectPath = path.join(backendPath, 'UpdateBansheeBlog', 'UpdateBansheeBlog.csproj');
-const backendUpdaterBuildScript = `dotnet build \"${backendUpdaterProjectPath}\" --configuration Release --verbosity quiet --output \"${releasePath}\"`;
-//child_process.exec(backendUpdaterBuildScript);
-console.log(backendUpdaterBuildScript);
-
-console.log('-- building backend --');
-const backendProjectPath = path.join(backendPath, 'BansheeBlog', 'BansheeBlog.csproj');
-const backendBuildScript = `dotnet build \"${backendProjectPath}\" --configuration Release --verbosity quiet --output \"${releasePath}\"`;
-//child_process.exec(backendBuildScript);
-console.log(backendBuildScript);
+function deleteFolderRec(input) {
+    const entries = fs.readdirSync(input, { withFileTypes: true });
+    const mappedEntries = entries.map(entry => ([entry, entry.isFile()]));
+    mappedEntries.forEach(entry => {
+        const inputPath = path.join(input, entry[0].name);
+        if (entry[1]) fs.unlinkSync(inputPath);
+        else deleteFolderRec(inputPath);
+    });
+    fs.rmdirSync(input);
+}
