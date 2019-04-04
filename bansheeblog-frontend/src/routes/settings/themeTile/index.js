@@ -16,6 +16,7 @@ export default class ThemeTile extends Component {
 
     state = {
     	themes: [],
+		current: this.props.current
     };
 
     loadThemes = async () => {
@@ -48,8 +49,9 @@ export default class ThemeTile extends Component {
     };
 
     themeChanged = ev => {
-    	const selected = this.state.themes[ev.target.selectedIndex - 1];
-    	this.props.activeChanged = selected;
+    	const selected = this.state.themes[ev.target.selectedIndex - 1].name;
+    	this.props.activeChanged(selected);
+    	this.setState({current: selected});
     };
 
 
@@ -73,7 +75,7 @@ export default class ThemeTile extends Component {
     		});
     	}
     };
-    findActiveThemeIndex = t => this.props.current && (this.props.current === t.name) || -1;
+    findActiveThemeIndex = t => this.state.current && (this.state.current === t.name);
 
     render(props, state) {
     	return (
