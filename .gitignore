@@ -439,3 +439,5 @@ __pycache__/
 *.sqlite-shm
 *.sqlite-wal
 bansheeblog-backend/credentials.txt
+bansheeblog-backend/BansheeBlog/data/public/robots.txt
+bansheeblog-backend/BansheeBlog/data/public/sitemap.xml
