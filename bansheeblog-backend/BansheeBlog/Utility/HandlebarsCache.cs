@@ -9,8 +9,6 @@ namespace BansheeBlog.Utility
     {
         private readonly ConcurrentDictionary<string, HandlebarsCacheFile> _cachedFiles = new ConcurrentDictionary<string, HandlebarsCacheFile>();
 
-        public static readonly HandlebarsCache Instance = new HandlebarsCache();
-
         public Action<TextWriter, object> GetRenderer(string filePath)
         {
             if (_cachedFiles.TryGetValue(filePath, out var file))

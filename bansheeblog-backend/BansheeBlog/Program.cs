@@ -22,7 +22,7 @@ namespace BansheeBlog
         public const bool DEV = false;
 #endif
         
-        public const string Version = "1.2.3";
+        public const string Version = "1.2.4";
         public const string ConfigPath = "config.json";
         public const string SettingsPath = "settings.json";
         
@@ -91,7 +91,7 @@ namespace BansheeBlog
             server.Get("/api/article/:id/markdown", Auth, ArticleRoutes.FetchOneMarkdown(db));
 
            
-            server.Put("/api/article", Auth, ArticleRoutes.Update(db));
+            server.Put("/api/article", Auth, ArticleRoutes.Upsert(db, settings, config));
             server.Put("/api/article/meta", Auth, ArticleRoutes.UpdateMeta(db));
             server.Delete("/api/article", Auth, ArticleRoutes.Remove(db));
 

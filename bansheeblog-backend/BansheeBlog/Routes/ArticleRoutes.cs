@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
+using BansheeBlog.Utility;
 using CommonMark;
 using Red;
 using Red.CookieSessions;
@@ -69,7 +70,7 @@ namespace BansheeBlog.Routes
             };
         }
 
-        public static Func<Request, Response, Task> Update(SQLiteAsyncConnection db)
+        public static Func<Request, Response, Task> Upsert(SQLiteAsyncConnection db, Settings settings, Configuration config)
         {
             return async (req, res) =>
             {
@@ -109,12 +110,12 @@ namespace BansheeBlog.Routes
                     articleMarkdown = new ArticleMarkdown {Id = article.Id};
                 }
 
-                Utility.TextFormatting.CopyMeta(article, updatedArticle);
+                TextFormatting.CopyMeta(article, updatedArticle);
 
                 articleMarkdown.Content = updatedArticle.Markdown;
                 articleHtml.Content = CommonMarkConverter.Convert(updatedArticle.Markdown);
 
-                var firstParagraph = Utility.TextFormatting.FirstParagraph(articleHtml.Content);
+                var firstParagraph = TextFormatting.FirstParagraph(articleHtml.Content);
                 article.Html = firstParagraph;
                 article.Markdown = "";
 
@@ -128,6 +129,7 @@ namespace BansheeBlog.Routes
                     await db.UpdateAllAsync(new object[] {article, articleHtml, articleMarkdown});
                 }
 
+                FileHandling.UpdateIndexingFiles(db, settings, config);
                 await res.SendString(article.Id.ToString());
             };
         }
@@ -154,7 +156,7 @@ namespace BansheeBlog.Routes
                     return;
                 }
 
-                Utility.TextFormatting.CopyMeta(existingArticle, updatedArticle);
+                TextFormatting.CopyMeta(existingArticle, updatedArticle);
 
                 await db.UpdateAsync(existingArticle);
                 await res.SendStatus(HttpStatusCode.OK);

@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
+using BansheeBlog.Utility;
+using Microsoft.AspNetCore.Http;
 using Red;
 using Red.HandlebarsRenderer;
 using SQLite;
@@ -22,7 +27,7 @@ namespace BansheeBlog.Routes
                 
                 if (settings.UseServerSideTracking)
                 {
-                    tracking.CollectInformation(req, "");
+                    var collect = tracking.CollectInformation(req, "");
                 }
                 
                 var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "index.hbs");
@@ -30,11 +35,11 @@ namespace BansheeBlog.Routes
                 var articles = await db.Table<Article>()
                     .Where(article => article.Public)
                     .OrderByDescending(article => article.Created)
-                    .Skip((page - 1) * 5)
-                    .Take(5)
+                    .Skip((page - 1) * 10)
+                    .Take(10)
                     .ToListAsync();
-
-                await res.RenderTemplate(templatePath, new FrontpageRenderParam(DateTime.UtcNow, articles, settings));
+                
+                await res.RenderTemplate(templatePath, new FrontpageRenderParam(articles, settings));
             };
         }
 
@@ -51,27 +56,25 @@ namespace BansheeBlog.Routes
                 var slug = req.Parameters["slug"];
                 if (settings.UseServerSideTracking)
                 {
-                    tracking.CollectInformation(req, "article/" + slug);
+                    var collect = tracking.CollectInformation(req, "article/" + slug);
                 }
                 var article = await db.FindAsync<Article>(a => a.Public && a.Slug == slug);
                 if (article == null)
                 {
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "error.hbs");
-                    await res.RenderTemplate(templatePath, new ArticleNotFoundRenderParam(DateTime.UtcNow, settings, "Article not found", $"The article with the slug '{slug}' was not found"));
+                    await res.RenderTemplate(templatePath, new ArticleNotFoundRenderParam(settings, "Article not found", $"The article with the slug '{slug}' was not found"));
                 }
                 else
                 {
                     var htmlContent = await db.GetAsync<ArticleHtml>(article.Id);
                     article.Html = htmlContent.Content;
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "article.hbs");
-                    await res.RenderTemplate(templatePath, new ArticleRenderParam(DateTime.UtcNow, article, settings));
                     var dateTimeFormat = req.GetDateTimeFormat();
                     await res.RenderTemplate(templatePath, new ArticleRenderParam(article, settings, dateTimeFormat));
                 }
             };
         }
     }
-    public class FrontpageRenderParam
 
     public abstract class RenderParam
     {
