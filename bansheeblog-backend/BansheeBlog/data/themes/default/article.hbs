@@ -2,26 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{Settings.BlogTitle}}</title>
+    <title>{{ Settings.BlogTitle }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
     <link href="https://fonts.googleapis.com/css?family=Black+Han+Sans|Tajawal" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {{> style}}
-    {{> meta}}
+    {{> style }}
+    {{> meta }}
 </head>
 <body>
 <div class="container">
-    {{> header}}
-    {{> navigation}}
+    {{> header }}
+    {{> navigation }}
     <main>
         <article class="post">
-            <p class="post-title"><b>{{Article.Title}}</b></p>
-            <p class="post-time"><i>{{Article.Created}}</i> ◦</p>
-            <section class="post-content-full">{{{Article.Html}}}</section>
+            <p class="post-title"><b>{{ Article.Title }}</b></p>
+            <p class="post-time">
+                <i>Created {{ FormattedCreatedDate }}</i> ◦
+                {{#if FormattedEditedDate}}
+                    <div class="post-time"><i>Edited {{ FormattedEditedDate }} </i> ◦</div>
+                {{/if}}
+            </p>
+            
+            <section class="post-content-full">{{{ Article.Html }}}</section>
         </article>
     </main>
-
-    {{> footer}}
+    {{> footer }}
 </div>
 </body>
 </html>

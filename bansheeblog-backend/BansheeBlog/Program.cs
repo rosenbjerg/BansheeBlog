@@ -96,6 +96,7 @@ namespace BansheeBlog
             server.Delete("/api/article", Auth, ArticleRoutes.Remove(db));
 
             server.Get("/api/settings", Auth, SettingsRoutes.Fetch(settings));
+            server.Get("/api/settings/timezones", Auth, SettingsRoutes.FetchTimeZones());
             server.Post("/api/settings", Auth, SettingsRoutes.Update(settings));
 
             server.Get("/api/visits/latest-month", Auth, AnalyticsRoutes.FetchLatest30Days(tracking));

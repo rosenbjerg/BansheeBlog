@@ -8,6 +8,7 @@ import cloneDeep from 'lodash/cloneDeep'
 
 import Card from 'preact-material-components/Card';
 import Typography from 'preact-material-components/Typography';
+import Select from 'preact-material-components/Select';
 import Icon from 'preact-material-components/Icon';
 import TextField from 'preact-material-components/TextField';
 import StaticFilesTile from "./staticFilesTile";
@@ -23,12 +24,15 @@ export default class Settings extends Component {
     state = {
     	settings: {},
     	themes: [],
+		timezones: [],
+		currentTimezoneIndex: -1
     };
 
     load = async () => {
     	const settings = await Get('/api/settings').then(res => res.json());
-    	this.setState({ settings });
-    	console.log("SETTINGS", settings);
+    	const timezones = await Get('/api/settings/timezones').then(res => res.json());
+    	const currentTimezoneIndex = timezones.indexOf(settings.Timezone) + 1;
+    	this.setState({ settings, timezones, currentTimezoneIndex });
     	this.savedSettings = cloneDeep(settings);
     };
 
@@ -50,8 +54,15 @@ export default class Settings extends Component {
     	this.save();
     }
 
-
-    activeThemeSet = theme => this.setState(state => state.settings.ActiveTheme = theme);
+	timezoneChanged = ev => {
+    	const selectedIndex = ev.target.selectedIndex;
+		const timezone = this.state.timezones[selectedIndex - 1];
+		this.setState(state => {
+			state.settings.Timezone = timezone;
+			state.currentTimezoneIndex = selectedIndex;
+		});
+	};
+    activeThemeSet = theme =>  this.setState(state => state.settings.ActiveTheme = theme);
     removeNavItem = nav => () => {
     	this.setState(state => pull(state.settings.Navigation, nav));
     };
@@ -70,11 +81,16 @@ export default class Settings extends Component {
 
     			<br />
 
-    			<Card class={[style.card, style.fourBlock].join(' ')}>
+    			<Card class={[style.card, style.fiveBlock].join(' ')}>
     				<Typography headline6>Blog info</Typography>
     				<TextField className="fullwidth" label="Author" value={state.settings.Author} onChange={linkState(this, 'settings.Author')} />
     				<TextField className="fullwidth" label="Blog title" value={state.settings.BlogTitle} onChange={linkState(this, 'settings.BlogTitle')} />
     				<TextField className="fullwidth" label="Blog description" value={state.settings.BlogDescription} onChange={linkState(this, 'settings.BlogDescription')} />
+					<Select class="fullwidth" hintText="Timezone" selectedIndex={state.currentTimezoneIndex} onChanged={this.timezoneChanged}>
+						{state.timezones.map(timezone => (
+							<Select.Item key={timezone}>{timezone}</Select.Item>
+						))}
+					</Select>
     			</Card>
 
 
@@ -87,11 +103,11 @@ export default class Settings extends Component {
 
 				<NavigationTile items={state.settings.Navigation} itemAdded={this.addNavItem} itemRemoved={this.removeNavItem} />
 
-				<ChangePasswordTile />
-
 				<UpdateTile />
 
-    			<ThemeTile current={state.settings.ActiveTheme} activeChanged={this.activeThemeSet} />
+				<ThemeTile current={state.settings.ActiveTheme} activeChanged={this.activeThemeSet} />
+
+				<ChangePasswordTile />
 
     		</div>
     	);

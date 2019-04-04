@@ -65,49 +65,70 @@ namespace BansheeBlog.Routes
                     article.Html = htmlContent.Content;
                     var templatePath = Path.Combine(config.ThemeDirectory, settings.ActiveTheme, "article.hbs");
                     await res.RenderTemplate(templatePath, new ArticleRenderParam(DateTime.UtcNow, article, settings));
+                    var dateTimeFormat = req.GetDateTimeFormat();
+                    await res.RenderTemplate(templatePath, new ArticleRenderParam(article, settings, dateTimeFormat));
                 }
             };
         }
     }
     public class FrontpageRenderParam
-    {
-        public DateTime Now { get; }
-        public List<Article> Articles { get; }
-        public Settings Settings { get; }
 
-        public FrontpageRenderParam(DateTime now, List<Article> articles, Settings settings)
+    public abstract class RenderParam
+    {
+        public readonly DateTime UtcNow;
+        public readonly Settings Settings;
+        
+        protected RenderParam(Settings settings)
         {
-            Now = now;
-            Articles = articles;
+            UtcNow = DateTime.UtcNow;
             Settings = settings;
         }
     }
 
-    public class ArticleRenderParam
+    public sealed class FrontpageRenderParam : RenderParam
     {
-        public DateTime Now { get; }
-        public Article Article { get; }
-        public Settings Settings { get; }
+        public readonly List<Article> Articles;
 
-        public ArticleRenderParam(DateTime now, Article article, Settings settings)
+        public FrontpageRenderParam(List<Article> articles, Settings settings) : base(settings)
         {
-            Now = now;
-            Article = article;
-            Settings = settings;
+            var timezone = TimeZoneInfo.FindSystemTimeZoneById(settings.Timezone);
+            foreach (var article in articles)
+            {
+                article.Created = TimeZoneInfo.ConvertTimeFromUtc(article.Created, timezone);
+            }
+            Articles = articles;
         }
+
+    }
+
+    public class ArticleRenderParam : RenderParam
+    {
+        public readonly Article Article;
+        public readonly string FormattedCreatedDate;
+        public readonly string FormattedEditedDate;
+
+        public ArticleRenderParam(Article article, Settings settings, DateTimeFormatInfo dateTimeFormatInfo) : base(settings)
+        {
+            Article = article;
+            var timezone = TimeZoneInfo.FindSystemTimeZoneById(settings.Timezone);
+            article.Created = TimeZoneInfo.ConvertTimeFromUtc(article.Created, timezone);
+            article.Edited = TimeZoneInfo.ConvertTimeFromUtc(article.Edited, timezone);
+            
+            FormattedCreatedDate = article.Created.ToString(dateTimeFormatInfo.FullDateTimePattern);
+            FormattedEditedDate = article.Edited != article.Created
+                ? article.Edited.ToString(dateTimeFormatInfo.FullDateTimePattern)
+                : "";
+        }
+
     }
     
-    public class ArticleNotFoundRenderParam
+    public class ArticleNotFoundRenderParam : RenderParam
     {
-        public DateTime Now { get; }
-        public Settings Settings { get; }
-        public string Title { get; }
-        public string Message { get; }
+        public readonly string Title;
+        public readonly string Message;
 
-        public ArticleNotFoundRenderParam(DateTime now, Settings settings, string title, string message)
+        public ArticleNotFoundRenderParam(Settings settings, string title, string message) : base(settings)
         {
-            Now = now;
-            Settings = settings;
             Title = title;
             Message = message;
         }

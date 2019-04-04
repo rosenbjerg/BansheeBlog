@@ -9,6 +9,13 @@ import { Delete, Get, Put } from '../../Fetcher';
 import { route } from 'preact-router';
 import Globals from '../../Globals';
 
+const timeOffset = new Date().getTimezoneOffset();
+const formatDate = dateString => {
+	const date = new Date(dateString);
+	date.setHours(date.getHours() - (timeOffset / 60));
+	return date.toLocaleString();
+};
+
 export default class Articles extends Component {
 
 	state = {
@@ -49,6 +56,8 @@ export default class Articles extends Component {
 		if (response.ok) {
 			const articles = await response.json();
 			articles.sort((a1, a2) => a1.Created < a2.Created);
+
+			console.log("articles", articles);
 			this.setState({ articles });
 		}
 		else {
@@ -75,7 +84,11 @@ export default class Articles extends Component {
 						<Typography class="truncate" headline6>{article.Title}</Typography>
 					</div>
 					<i class={style.created}>
-						<Typography subtitle2>{new Date(article.Created).toLocaleString()}</Typography>
+						<Typography subtitle2>{formatDate(article.Created)}</Typography>
+						{/*{article.Created !== article.Edited && [*/}
+							{/*' edited: ',*/}
+							{/*<Typography subtitle2>{dayjs(article.Edited).format("HH:mm DD/MM 'YY")}</Typography>*/}
+						{/*]}*/}
 					</i>
 					<span className={style.content}>
 						<Typography body2>

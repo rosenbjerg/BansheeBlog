@@ -26,6 +26,9 @@ namespace BansheeBlog.Models
         
         [JsonProperty(Required = Required.Always)]
         public bool UseServerSideTracking { get; set; }
+
+        [JsonProperty(Required = Required.Always)]
+        public bool UseServerSideTracking = false;
         
         [JsonProperty(Required = Required.Always)]
         public List<NavigationElement> Navigation { get; set; } = new List<NavigationElement>();

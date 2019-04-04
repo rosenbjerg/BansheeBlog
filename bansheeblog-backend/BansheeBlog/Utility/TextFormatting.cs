@@ -37,7 +37,19 @@ namespace BansheeBlog.Utility
 
             existing.Public = updated.Public;
         }
+
+    }
+
+    public static class Localization
+    {
+        public static string[] TimeZoneNames = TimeZoneInfo.GetSystemTimeZones()
+            .Select(timezone => timezone.Id).ToArray();
         
-        
+        public static DateTimeFormatInfo GetDateTimeFormat(this Request request)
+        {
+            var headers = request.UnderlyingRequest.GetTypedHeaders();
+            var culture = new CultureInfo(headers.AcceptLanguage.FirstOrDefault()?.Value.Value ?? "en-UK");
+            return culture.DateTimeFormat;
+        }
     }
 }

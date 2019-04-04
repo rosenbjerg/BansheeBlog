@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using BansheeBlog.Models;
+using BansheeBlog.Utility;
 using Newtonsoft.Json;
 using Red;
 using Red.Extensions;
@@ -41,5 +42,9 @@ namespace BansheeBlog.Routes
             return async (req, res) => { await res.SendJson(settings); };
         }
 
+        public static Func<Request, Response, Task> FetchTimeZones()
+        {
+            return async (req, res) => { await res.SendJson(Localization.TimeZoneNames); };
+        }
     }
 }
