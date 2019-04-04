@@ -22,7 +22,7 @@ namespace BansheeBlog
         public const bool DEV = false;
 #endif
         
-        public const string Version = "1.2.4";
+        public const string Version = "1.3.0";
         public const string ConfigPath = "config.json";
         public const string SettingsPath = "settings.json";
         
