@@ -7,12 +7,14 @@ import Typography from 'preact-material-components/Typography';
 import Dialog from 'preact-material-components/Dialog';
 import Icon from 'preact-material-components/Icon';
 import TextField from 'preact-material-components/TextField';
+import Checkbox from 'preact-material-components/Checkbox';
 
 export default class NavigationTile extends Component {
 
     state = {
     	newNavigationItemName: '',
     	newNavigationItemUrl: 'https://',
+		newNavigationItemNewWindow: true
     };
 
     bindDialog = ref => this.manageNavigationForm = ref;
@@ -22,14 +24,19 @@ export default class NavigationTile extends Component {
     itemAdded = () => {
     	const navItem = {
     		Name: this.state.newNavigationItemName,
-    		Href: this.state.newNavigationItemUrl
+    		Href: this.state.newNavigationItemUrl,
+			OpenInNewWindow: this.state.newNavigationItemNewWindow
     	};
     	this.setState(state => {
     		state.newNavigationItemName = '';
     		state.newNavigationItemUrl = 'https://';
+    		state.newNavigationItemNewWindow = true;
     		this.props.itemAdded(navItem);
     	});
     };
+	toggleNewNavigationItemNewWindow = () => this.setState({
+		newNavigationItemNewWindow: !newNavigationItemNewWindow
+	});
 
     render(props, state) {
     	return (
@@ -50,8 +57,11 @@ export default class NavigationTile extends Component {
     									<Typography body2>{nav.Name}</Typography>
     								</td>
     								<td>
-    									<a href={nav.Href}>{nav.Href}</a>
+    									<a href={nav.Href} target="_blank">{nav.Href}</a>
     								</td>
+									<td>
+										<a href={nav.Href}>{nav.Href}</a>
+									</td>
     								<td>
     									<Icon class="hoverIcon" onClick={props.itemRemoved(nav)}>close</Icon>
     								</td>
@@ -74,6 +84,9 @@ export default class NavigationTile extends Component {
     							<td>
     								<TextField class="fullwidth" value={state.newNavigationItemUrl} onChange={linkState(this, 'newNavigationItemUrl')} label="Link" />
     							</td>
+								<td>
+									<Checkbox checked={state.newNavigationItemNewWindow} onClick={this.toggleNewNavigationItemNewWindow}/>
+								</td>
     							<td>
     								<Icon class="hoverIcon" onClick={this.itemAdded}>add</Icon>
     							</td>

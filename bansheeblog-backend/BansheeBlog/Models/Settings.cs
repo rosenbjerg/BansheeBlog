@@ -7,31 +7,31 @@ namespace BansheeBlog.Models
     public class Settings
     {
         [JsonProperty(Required = Required.Always)]
-        public string BlogTitle { get; set; } = "Your blog title";
+        public string BlogTitle = "Your blog title";
         
         [JsonProperty(Required = Required.Always)]
-        public string BlogDescription { get; set; } = "Your blog description";
+        public string BlogDescription = "Your blog description";
         
         [JsonProperty(Required = Required.Always)]
-        public string Author { get; set; } = "Your name";
+        public string Author = "Your name";
         
         [JsonProperty(Required = Required.Always)]
-        public string BlogUrl { get; set; } = "http://localhost:5420/";
+        public string BlogUrl = "http://localhost:5420/";
         
         [JsonProperty(Required = Required.Always)]
-        public string ActiveTheme { get; set; } = "default";
+        public string ActiveTheme = "default";
         
         [JsonProperty(Required = Required.Always)]
-        public string GoogleAnalyticsTrackingId { get; set; } = "";
+        public string Timezone = "Central European Standard Time";
         
         [JsonProperty(Required = Required.Always)]
-        public bool UseServerSideTracking { get; set; }
+        public string GoogleAnalyticsTrackingId = "";
 
         [JsonProperty(Required = Required.Always)]
         public bool UseServerSideTracking = false;
         
         [JsonProperty(Required = Required.Always)]
-        public List<NavigationElement> Navigation { get; set; } = new List<NavigationElement>();
+        public List<NavigationElement> Navigation = new List<NavigationElement>();
         
         public static Settings Load(string filepath)
         {
@@ -45,7 +45,8 @@ namespace BansheeBlog.Models
 
     public class NavigationElement
     {
-        public string Name { get; set; }
-        public string Href { get; set; }
+        public string Name;
+        public string Href;
+        public bool OpenInNewWindow = true;
     }
 }

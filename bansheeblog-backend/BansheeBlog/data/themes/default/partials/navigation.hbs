@@ -1,7 +1,11 @@
 <nav>
     <ul>{{#each settings.Navigation}}
         <li>
-            <a class="no-link-style" href="{{Href}}" target="_blank">{{Name}}</a>
+            {{#if OpenInNewWindow}}
+                <a class="no-link-style" href="{{Href}}" target="_blank">{{Name}}</a>
+            {{else}}
+                <a class="no-link-style" href="{{Href}}" target="_self">{{Name}}</a>
+            {{/if}}
         </li>{{~/each}}
     </ul>
 </nav>
