@@ -43,7 +43,7 @@ namespace BansheeBlog
                 });
             };
 
-            FileHandling.CleanupTemporaryUpdater();
+            Updater.CleanupTemporaryFiles();
             
             // Setup database and tables
             Directory.CreateDirectory(Path.GetDirectoryName(config.AnalyticsDatabaseFilePath));

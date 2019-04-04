@@ -89,14 +89,20 @@ namespace UpdateBansheeBlog
 
         private static async Task AwaitServerShutdown(string backendDir)
         {
-            await Task.Delay(750);
-            try
+            const int maxTries = 20;
+            var tries = 0;
+            var backendMainFile = Path.Combine(backendDir, "BansheeBlog.dll");
+            while (File.Exists(backendMainFile) && tries++ < maxTries)
             {
-                File.Delete(Path.Combine(backendDir, "BansheeBlog.dll"));
-            }
-            catch (Exception)
-            {
-                await AwaitServerShutdown(backendDir);
+                await Task.Delay(750);
+                try
+                {
+                    File.Delete(backendMainFile);
+                }
+                catch (Exception)
+                {
+                    await AwaitServerShutdown(backendDir);
+                }
             }
         }
         

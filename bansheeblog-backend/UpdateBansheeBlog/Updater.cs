@@ -101,6 +101,19 @@ namespace UpdateBansheeBlog
             Process.Start(startInfo);
             return true;
         }
+        public static async Task CleanupTemporaryFiles()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(7));
+            try
+            {
+                if (Directory.Exists(Updater.TemporaryUpdater))
+                    Directory.Delete(Updater.TemporaryUpdater, true);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Failed to delete temporary-updater folder");
+            }
+        }
     }
     public class UpdatesAvailableStatus
     {
