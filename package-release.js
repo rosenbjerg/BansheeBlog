@@ -7,7 +7,8 @@ const version = process.argv[2];
 if (!version) return console.log('-- no version found in arguments --');
 if (!version.match(/^\d+\.\d+\.\d+$/)) return console.log('-- invalid version. must be in the format x.x.x --');
 
-console.log(`-- building BansheeBlog v. ${version} --`);
+const title = 'BansheeBlog';
+console.log(`-- building \x1b[1m${title}\x1b[0m v. \x1b[1m${version}\x1b[0m --`);
 
 const basePath = path.resolve(`release`);
 const releasePath = path.join(basePath, 'banshee-blog');
@@ -64,18 +65,30 @@ buildTask('building zip archive', () => zipDirectory(releasePath, `banshee-blog-
 
 buildTask('removing archived files', () => deleteFolder(basePath));
 
-console.log(`-- done building in ${((Date.now() - started) / 1000.0).toFixed(1)} seconds --`);
+console.log(`-- done building in \x1b[32m${((Date.now() - started) / 1000.0).toFixed(1)}\x1b[0m seconds --`);
+
+
+
 
 
 function buildTask(title, action) {
-    process.stdout.write(` ${title}..`.padEnd(35))
-    const started = Date.now();
-    const success = action();
-    let elapsed = Date.now() - started;
-    if (elapsed > 1000) process.stdout.write(`${(elapsed / 1000.0).toFixed(1)}s`.padEnd(8));
-    else process.stdout.write(`${elapsed}ms`.padEnd(8));
-    console.log(success ? '' : 'FAILED!');
-    if (!success) process.exit();
+    process.stdout.write(` ${title}..`.padEnd(35));
+    const taskStarted = Date.now();
+    let success = true;
+    try {
+        success = action();
+    }
+    catch (e) {
+        success = false;
+    }
+    let elapsed = Date.now() - taskStarted;
+    let time = elapsed > 1000 ? `${(elapsed / 1000.0).toFixed(1)}s` : `${elapsed}ms`;
+    let color = success ? '\x1b[32m' : '\x1b[31m';
+    console.log(color + time.padEnd(8) + (success ? '' : 'FAILED!') + '\x1b[0m');
+    if (!success) {
+        console.log(`--\x1b[31m release build failed after ${((Date.now() - buildStarted) / 1000.0).toFixed(1)} seconds \x1b[0m--`);
+        process.exit();
+    }
 }
 
 function zipDirectory(sourceDir, outputFilename) {
@@ -90,15 +103,10 @@ function zipDirectory(sourceDir, outputFilename) {
 }
 
 function replaceInFile(file, regex, replacement) {
-    try {
-        const original = fs.readFileSync(file, 'utf8');
-        const modified = original.replace(regex, replacement);
-        fs.writeFileSync(file, modified, 'utf8');
-        return true;
-    }
-    catch (e) {
-        return false;
-    }
+    const original = fs.readFileSync(file, 'utf8');
+    const modified = original.replace(regex, replacement);
+    fs.writeFileSync(file, modified, 'utf8');
+    return true;
 }
 
 function createDirectory(dir) {
@@ -108,13 +116,11 @@ function createDirectory(dir) {
 }
 
 function copyFolder(input, output) {
-    try {
+    if (fs.existsSync(input)) {
         copyFolderRec(input, output);
         return true;
     }
-    catch (e) {
-        return false;
-    }
+    else return false;
 }
 
 function copyFolderRec(input, output) {
@@ -128,24 +134,26 @@ function copyFolderRec(input, output) {
         else copyFolderRec(inputPath, outputPath);
     });
 }
-
-function deleteFolder(input) {
-    try {
-        deleteFolderRec(input);
-        return true;
+function createDirectory(dir) {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
     }
-    catch (e) {
-        return false;
-    }
+    return true;
 }
 
-function deleteFolderRec(input) {
-    const entries = fs.readdirSync(input, { withFileTypes: true });
+function deleteFolder(dir) {
+    if (fs.existsSync(dir)) {
+        deleteFolderRec(dir);
+    }
+    return true;
+}
+function deleteFolderRec(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
     const mappedEntries = entries.map(entry => ([entry, entry.isFile()]));
     mappedEntries.forEach(entry => {
-        const inputPath = path.join(input, entry[0].name);
+        const inputPath = path.join(dir, entry[0].name);
         if (entry[1]) fs.unlinkSync(inputPath);
         else deleteFolderRec(inputPath);
     });
-    fs.rmdirSync(input);
+    fs.rmdirSync(dir);
 }
