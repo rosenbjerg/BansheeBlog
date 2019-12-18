@@ -1,0 +1,9 @@
+{
+  "groups": {
+    "default": {
+      "packages": [
+        "bansheeblog-frontend/package.json"
+      ]
+    }
+  }
+}
