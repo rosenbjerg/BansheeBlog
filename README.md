@@ -1,4 +1,7 @@
 # BansheeBlog
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/rosenbjerg/BansheeBlog.svg)](https://greenkeeper.io/)
+
 #### A simple, personal blogging platform
 
 ### Features
