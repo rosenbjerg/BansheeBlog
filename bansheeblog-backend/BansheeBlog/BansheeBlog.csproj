@@ -11,7 +11,7 @@
     <PackageReference Include="CommonMark.NET" Version="0.15.1" />
     <PackageReference Include="Handlebars.Net" Version="1.9.5" />
     <PackageReference Include="Microsoft.AspNetCore.HttpOverrides" Version="2.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Red.CookieSessions" Version="3.0.1" />
     <PackageReference Include="Red.HandlebarsRenderer" Version="1.1.0" />
     <PackageReference Include="RHttpServer" Version="3.5.2" />
